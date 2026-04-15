@@ -5,11 +5,14 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TableToolbar from '@/components/TableToolbar';
 import { formatLastModified } from '@/lib/formatDate';
+import { toast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 export default function ContainersPage() {
-  const { loadingListGuangzhou, loadingListYiwu, updateLoadingListEntry, deleteLoadingListEntry } = useStore();
+  const { loadingListGuangzhou, loadingListYiwu, updateLoadingListEntry, addLoadingListEntry } = useStore();
   const allEntries = [...loadingListGuangzhou, ...loadingListYiwu];
   const [search, setSearch] = useState('');
   const [selectMode, setSelectMode] = useState(false);
@@ -17,6 +20,8 @@ export default function ContainersPage() {
   const [editContainer, setEditContainer] = useState<string | null>(null);
   const [editType, setEditType] = useState<'origin' | 'kerung' | 'tatopani'>('origin');
   const [editForm, setEditForm] = useState({ containerNo: '', dispatchedDate: '', dispatchedFrom: '', arrivalDate: '', arrivalLocation: '' });
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ containerNo: '', dispatchedDate: '', dispatchedFrom: 'Guangzhou', consignmentNo: '' });
   const navigate = useNavigate();
 
   const containerMap = useMemo(() => {
@@ -94,12 +99,113 @@ export default function ContainersPage() {
     setEditContainer(null);
   };
 
+  const handleAddNew = async () => {
+    if (!addForm.containerNo.trim()) {
+      toast({ title: 'Error', description: 'Container No. is required', variant: 'destructive' });
+      return;
+    }
+    const origin = addForm.dispatchedFrom === 'Yiwu' ? 'yiwu' : 'guangzhou' as 'guangzhou' | 'yiwu';
+    await addLoadingListEntry({
+      date: addForm.dispatchedDate,
+      consignmentNo: addForm.consignmentNo || `CTN-${Date.now()}`,
+      marka: '',
+      totalCTN: 0,
+      cbm: 0,
+      gw: 0,
+      destination: 'TATOPANI' as any,
+      status: '' as any,
+      client: '',
+      remarks: '',
+      lotNo: '',
+      dispatchedFrom: addForm.dispatchedDate,
+      container: addForm.containerNo,
+      arrivalDateNylam: '',
+      arrivalAtLhasa: '',
+      lhasaContainer: '',
+      dispatchedFromLhasa: '',
+      kerung: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
+      tatopani: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
+      followUp: false,
+      origin,
+      createdBy: '',
+      updatedBy: '',
+      updatedAt: '',
+    }, origin);
+    toast({ title: 'Success', description: `Container "${addForm.containerNo}" added` });
+    setAddOpen(false);
+    setAddForm({ containerNo: '', dispatchedDate: '', dispatchedFrom: 'Guangzhou', consignmentNo: '' });
+  };
+
+  const handleExport = () => {
+    const data = filtered.map(c => ({
+      'Container No.': c.containerNo,
+      'Total Consignments': c.entries.length,
+      'Dispatched Date': c.dispatchedDate,
+      'Dispatched From': c.dispatchedFrom,
+      'Arrival Date': c.arrivalDate,
+      'Arrival Location': c.arrivalLocation,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Containers');
+    XLSX.writeFile(wb, 'containers.xlsx');
+  };
+
+  const handleImport = (rows: any[]) => {
+    let imported = 0;
+    rows.forEach(row => {
+      const containerNo = row['Container No.'] || row['container'] || row['containerNo'] || row['Container'] || '';
+      const consignmentNo = row['Consignment No.'] || row['consignment_no'] || row['consignmentNo'] || '';
+      const dispatchedDate = row['Dispatched Date'] || row['dispatched_date'] || '';
+      const dispatchedFrom = row['Dispatched From'] || row['dispatched_from'] || 'Guangzhou';
+      if (!containerNo) return;
+
+      const origin = dispatchedFrom.toLowerCase().includes('yiwu') ? 'yiwu' : 'guangzhou' as 'guangzhou' | 'yiwu';
+
+      // Check if an existing entry has this consignment and update its container
+      const list = origin === 'yiwu' ? loadingListYiwu : loadingListGuangzhou;
+      const existing = consignmentNo ? list.find(e => e.consignmentNo === consignmentNo) : null;
+      if (existing) {
+        updateLoadingListEntry(existing.id, origin, { container: containerNo, dispatchedFrom: dispatchedDate });
+      } else {
+        addLoadingListEntry({
+          date: dispatchedDate,
+          consignmentNo: consignmentNo || `CTN-${Date.now()}-${imported}`,
+          marka: row['Marka'] || row['marka'] || '',
+          totalCTN: Number(row['Total CTN'] || row['total_ctn'] || 0),
+          cbm: Number(row['CBM'] || row['cbm'] || 0),
+          gw: Number(row['GW'] || row['gw'] || 0),
+          destination: 'TATOPANI' as any,
+          status: '' as any,
+          client: row['Client'] || row['client'] || '',
+          remarks: '',
+          lotNo: '',
+          dispatchedFrom: dispatchedDate,
+          container: containerNo,
+          arrivalDateNylam: '',
+          arrivalAtLhasa: '',
+          lhasaContainer: '',
+          dispatchedFromLhasa: '',
+          kerung: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
+          tatopani: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
+          followUp: false,
+          origin,
+          createdBy: '',
+          updatedBy: '',
+          updatedAt: '',
+        }, origin);
+      }
+      imported++;
+    });
+    toast({ title: 'Import Complete', description: `${imported} container(s) imported` });
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Containers</h2>
       <TableToolbar
         searchValue={search} onSearchChange={setSearch}
-        onAdd={() => {}} onExport={() => {}} onImport={() => {}}
+        onAdd={() => setAddOpen(true)} onExport={handleExport} onImport={handleImport}
         onSelectToggle={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
         selectMode={selectMode} selectedCount={selected.size}
       />
@@ -145,6 +251,30 @@ export default function ContainersPage() {
         </table>
       </div>
 
+      {/* Add New Container Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-bold">Add New Container</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><label className="text-xs font-medium">Container No. *</label><Input value={addForm.containerNo} onChange={(e) => setAddForm({ ...addForm, containerNo: e.target.value })} placeholder="e.g. CNTR-001" /></div>
+            <div><label className="text-xs font-medium">Consignment No.</label><Input value={addForm.consignmentNo} onChange={(e) => setAddForm({ ...addForm, consignmentNo: e.target.value })} placeholder="Optional" /></div>
+            <div><label className="text-xs font-medium">Dispatched Date</label><Input type="date" value={addForm.dispatchedDate} onChange={(e) => setAddForm({ ...addForm, dispatchedDate: e.target.value })} /></div>
+            <div>
+              <label className="text-xs font-medium">Dispatched From</label>
+              <Select value={addForm.dispatchedFrom} onValueChange={(v) => setAddForm({ ...addForm, dispatchedFrom: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Guangzhou">Guangzhou</SelectItem>
+                  <SelectItem value="Yiwu">Yiwu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleAddNew} className="w-full">Add Container</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Container Dialog */}
       <Dialog open={!!editContainer} onOpenChange={() => setEditContainer(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle className="font-bold">Edit Container</DialogTitle></DialogHeader>
