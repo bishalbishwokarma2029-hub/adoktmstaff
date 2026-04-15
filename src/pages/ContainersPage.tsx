@@ -137,7 +137,18 @@ export default function ContainersPage() {
   };
 
   const handleExport = () => {
-    const data = filtered.map(c => ({
+    const COMPANY_HEADER = [
+      ['义乌市阿卓国际供应链管理有限公司'],
+      ['ADO INTERNATIONAL SUPPLY CHAIN MANAGEMENT CO LTD'],
+      ['广东省广州市白云区石井镇凰岗村领龙国际1F001档'],
+      ['Nepal: +977 9851067385 / 9851066781', '', 'Chinese Speaking Mobile: +8613322519322'],
+      ['Kerung: +8613889021731', '', 'Nepali Speaking Mobile: +8619908916803'],
+      ['Tatopani: +977 9846207176', '', 'Email: 1973459072@qq.com'],
+      ['Lhasa: +8613728961850', '', 'Kathmandu'],
+      [],
+    ];
+    const toExport = selected.size > 0 ? containerMap.filter(c => selected.has(c.containerNo)) : filtered;
+    const data = toExport.map(c => ({
       'Container No.': c.containerNo,
       'Total Consignments': c.entries.length,
       'Dispatched Date': c.dispatchedDate,
@@ -145,8 +156,20 @@ export default function ContainersPage() {
       'Arrival Date': c.arrivalDate,
       'Arrival Location': c.arrivalLocation,
     }));
-    const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(COMPANY_HEADER);
+    const startRow = COMPANY_HEADER.length;
+    XLSX.utils.sheet_add_json(ws, data, { origin: `A${startRow + 1}` });
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const headerCell = XLSX.utils.encode_cell({ r: startRow, c: C });
+      if (ws[headerCell]) ws[headerCell].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+      for (let R = startRow + 1; R <= range.e.r; R++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) ws[cell].s = { alignment: { horizontal: 'center' } };
+      }
+    }
+    ws['!cols'] = Array.from({ length: range.e.c + 1 }, () => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, ws, 'Containers');
     XLSX.writeFile(wb, 'containers.xlsx');
   };

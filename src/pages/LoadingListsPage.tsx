@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useStore } from '@/store/useStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,8 +10,19 @@ import TableToolbar from '@/components/TableToolbar';
 import { DESTINATIONS, STATUSES, getStatusClass, getDestinationClass } from '@/types';
 import type { LoadingListEntry, Destination, ConsignmentStatus, KerungDetails, TatopaniDetails, OldNylamEntry } from '@/types';
 import { formatLastModified } from '@/lib/formatDate';
+import DebouncedInput from '@/components/DebouncedInput';
 import * as XLSX from 'xlsx';
 
+const COMPANY_HEADER = [
+  ['义乌市阿卓国际供应链管理有限公司'],
+  ['ADO INTERNATIONAL SUPPLY CHAIN MANAGEMENT CO LTD'],
+  ['广东省广州市白云区石井镇凰岗村领龙国际1F001档'],
+  ['Nepal: +977 9851067385 / 9851066781', '', 'Chinese Speaking Mobile: +8613322519322'],
+  ['Kerung: +8613889021731', '', 'Nepali Speaking Mobile: +8619908916803'],
+  ['Tatopani: +977 9846207176', '', 'Email: 1973459072@qq.com'],
+  ['Lhasa: +8613728961850', '', 'Kathmandu'],
+  [],
+];
 const emptyKerung = (): KerungDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
 const emptyTatopani = (): TatopaniDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
 
@@ -90,8 +101,36 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
   const handleExport = () => {
     const toExport = selected.size > 0 ? list.filter(e => selected.has(e.id)) : filtered;
     const data = toExport.map(({ id, kerung, tatopani, origin: o, ...rest }) => rest);
-    const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
+    const headerRows = COMPANY_HEADER;
+    const ws = XLSX.utils.aoa_to_sheet(headerRows);
+    const startRow = headerRows.length;
+    XLSX.utils.sheet_add_json(ws, data, { origin: `A${startRow + 1}` });
+    // Style: bold headers, center align all data
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const headerCell = XLSX.utils.encode_cell({ r: startRow, c: C });
+      if (ws[headerCell]) {
+        ws[headerCell].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+      }
+      for (let R = startRow + 1; R <= range.e.r; R++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) {
+          if (!ws[cell].s) ws[cell].s = {};
+          ws[cell].s = { alignment: { horizontal: 'center' } };
+        }
+      }
+    }
+    // Company header styling
+    for (let R = 0; R < startRow; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        if (ws[cell]) {
+          ws[cell].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+        }
+      }
+    }
+    ws['!cols'] = Array.from({ length: range.e.c + 1 }, () => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, ws, cityName);
     XLSX.writeFile(wb, `loading_list_${origin}.xlsx`);
   };
@@ -372,9 +411,9 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                   <div key={ki} className="border rounded p-2 mb-2 bg-accent/10">
                                     <p className="font-bold text-xs mb-1">Container {ki + 1}</p>
                                     <div className="space-y-1.5">
-                                      <div><label className="text-xs text-muted-foreground">Dispatched from Nylam</label><Input className="h-7 text-xs" value={k.dispatchedFromNylam} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], dispatchedFromNylam: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Loaded CTN</label><Input type="number" className="h-7 text-xs" value={k.loadedCTN ?? ''} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], loadedCTN: ev.target.value ? Number(ev.target.value) : null }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Nylam Container</label><Input className="h-7 text-xs" value={k.nylamContainer} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], nylamContainer: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Dispatched from Nylam</label><DebouncedInput className="h-7 text-xs" value={k.dispatchedFromNylam} onChange={(v) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], dispatchedFromNylam: v }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Loaded CTN</label><DebouncedInput type="number" className="h-7 text-xs" value={k.loadedCTN ?? ''} onChange={(v) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], loadedCTN: v ? Number(v) : null }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Nylam Container</label><DebouncedInput className="h-7 text-xs" value={k.nylamContainer} onChange={(v) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], nylamContainer: v }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
                                       <div><label className="text-xs text-muted-foreground">Status</label>
                                         <select className="h-7 text-xs border rounded px-1 w-full bg-background" value={k.status} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], status: ev.target.value as any }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }}>
                                           <option value="">--</option>
@@ -382,8 +421,8 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                           <option value="At Kerung port">At Kerung port</option>
                                         </select>
                                       </div>
-                                      <div><label className="text-xs text-muted-foreground">Received CTN</label><Input type="number" className="h-7 text-xs" value={k.receivedCTN ?? ''} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], receivedCTN: ev.target.value ? Number(ev.target.value) : null }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Arrival Date</label><Input type="date" className="h-7 text-xs" value={k.arrivalDate} onChange={(ev) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], arrivalDate: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Received CTN</label><DebouncedInput type="number" className="h-7 text-xs" value={k.receivedCTN ?? ''} onChange={(v) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], receivedCTN: v ? Number(v) : null }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Arrival Date</label><DebouncedInput type="date" delay={100} className="h-7 text-xs" value={k.arrivalDate} onChange={(v) => { const nk = [...e.kerung]; nk[ki] = { ...nk[ki], arrivalDate: v }; store.updateLoadingListEntry(e.id, origin, { kerung: nk }); }} /></div>
                                     </div>
                                   </div>
                                 ))}
@@ -406,9 +445,9 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                   <div key={ti} className="border rounded p-2 mb-2 bg-accent/10">
                                     <p className="font-bold text-xs mb-1">Container {ti + 1}</p>
                                     <div className="space-y-1.5">
-                                      <div><label className="text-xs text-muted-foreground">Dispatched from Nylam</label><Input className="h-7 text-xs" value={t.dispatchedFromNylam} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], dispatchedFromNylam: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Loaded CTN</label><Input type="number" className="h-7 text-xs" value={t.loadedCTN ?? ''} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], loadedCTN: ev.target.value ? Number(ev.target.value) : null }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Nylam Container</label><Input className="h-7 text-xs" value={t.nylamContainer} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], nylamContainer: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Dispatched from Nylam</label><DebouncedInput className="h-7 text-xs" value={t.dispatchedFromNylam} onChange={(v) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], dispatchedFromNylam: v }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Loaded CTN</label><DebouncedInput type="number" className="h-7 text-xs" value={t.loadedCTN ?? ''} onChange={(v) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], loadedCTN: v ? Number(v) : null }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Nylam Container</label><DebouncedInput className="h-7 text-xs" value={t.nylamContainer} onChange={(v) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], nylamContainer: v }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
                                       <div><label className="text-xs text-muted-foreground">Status</label>
                                         <select className="h-7 text-xs border rounded px-1 w-full bg-background" value={t.status} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], status: ev.target.value as any }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }}>
                                           <option value="">--</option>
@@ -416,8 +455,8 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                           <option value="At Tatopani port">At Tatopani port</option>
                                         </select>
                                       </div>
-                                      <div><label className="text-xs text-muted-foreground">Received CTN</label><Input type="number" className="h-7 text-xs" value={t.receivedCTN ?? ''} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], receivedCTN: ev.target.value ? Number(ev.target.value) : null }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
-                                      <div><label className="text-xs text-muted-foreground">Arrival Date</label><Input type="date" className="h-7 text-xs" value={t.arrivalDate} onChange={(ev) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], arrivalDate: ev.target.value }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Received CTN</label><DebouncedInput type="number" className="h-7 text-xs" value={t.receivedCTN ?? ''} onChange={(v) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], receivedCTN: v ? Number(v) : null }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
+                                      <div><label className="text-xs text-muted-foreground">Arrival Date</label><DebouncedInput type="date" delay={100} className="h-7 text-xs" value={t.arrivalDate} onChange={(v) => { const nt = [...e.tatopani]; nt[ti] = { ...nt[ti], arrivalDate: v }; store.updateLoadingListEntry(e.id, origin, { tatopani: nt }); }} /></div>
                                     </div>
                                   </div>
                                 ))}
