@@ -77,6 +77,7 @@ export type Database = {
           id: string
           title: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           attachments?: Json | null
@@ -86,6 +87,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           attachments?: Json | null
@@ -95,6 +97,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -286,25 +289,31 @@ export type Database = {
           created_at: string
           created_by: string | null
           data: Json
+          file_url: string | null
           id: string
           title: string | null
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           data?: Json
+          file_url?: string | null
           id?: string
           title?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
           data?: Json
+          file_url?: string | null
           id?: string
           title?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
