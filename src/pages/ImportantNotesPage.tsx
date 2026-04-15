@@ -1,0 +1,395 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image } from 'lucide-react';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+
+/* ───── Recent Loading Lists Tab ───── */
+
+interface LoadingListEntry {
+  id: string;
+  title: string | null;
+  data: any[][];
+  created_at: string;
+}
+
+function RecentLoadingLists() {
+  const { user } = useAuth();
+  const [lists, setLists] = useState<LoadingListEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editData, setEditData] = useState<any[][]>([]);
+  const [showDialog, setShowDialog] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  const fetchLists = useCallback(async () => {
+    const { data } = await supabase
+      .from('recent_loading_lists')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setLists((data ?? []).map((d: any) => ({ ...d, data: Array.isArray(d.data) ? d.data : [] })));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchLists(); }, [fetchLists]);
+
+  const parseExcel = (file: File): Promise<any[][]> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(e.target?.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+          resolve(rows);
+        } catch { reject(new Error('Failed to parse excel')); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+  const handleFile = async (file: File) => {
+    try {
+      const rows = await parseExcel(file);
+      if (!rows.length) { toast.error('Empty file'); return; }
+      setEditTitle(file.name.replace(/\.\w+$/, ''));
+      setEditData(rows);
+      setEditId(null);
+      setShowDialog(true);
+    } catch { toast.error('Could not read file'); }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text');
+    if (!text) return;
+    const rows = text.split('\n').map(r => r.split('\t'));
+    if (rows.length) {
+      setEditTitle('Pasted Data');
+      setEditData(rows);
+      setEditId(null);
+      setShowDialog(true);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  const saveList = async () => {
+    if (!editData.length) { toast.error('No data'); return; }
+    if (editId) {
+      await supabase.from('recent_loading_lists').update({ title: editTitle, data: editData as any, updated_at: new Date().toISOString() }).eq('id', editId);
+      toast.success('Updated');
+    } else {
+      await supabase.from('recent_loading_lists').insert({ title: editTitle, data: editData as any, created_by: user?.id });
+      toast.success('Saved');
+    }
+    setShowDialog(false);
+    fetchLists();
+  };
+
+  const deleteList = async (id: string) => {
+    await supabase.from('recent_loading_lists').delete().eq('id', id);
+    toast.success('Deleted');
+    fetchLists();
+  };
+
+  const openEdit = (entry: LoadingListEntry) => {
+    setEditId(entry.id);
+    setEditTitle(entry.title ?? '');
+    setEditData(entry.data);
+    setShowDialog(true);
+  };
+
+  const updateCell = (r: number, c: number, val: string) => {
+    setEditData(prev => {
+      const copy = prev.map(row => [...row]);
+      copy[r][c] = val;
+      return copy;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button size="sm" onClick={() => fileRef.current?.click()}>
+          <Upload className="h-4 w-4 mr-1" /> Upload Excel
+        </Button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = ''; }} />
+        <span className="text-xs text-muted-foreground">or drag & drop / paste (Ctrl+V) below</span>
+      </div>
+
+      <div
+        ref={dropRef}
+        onDragOver={e => e.preventDefault()}
+        onDrop={handleDrop}
+        onPaste={handlePaste}
+        tabIndex={0}
+        className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground hover:border-primary/40 transition-colors cursor-pointer focus:outline-none focus:border-primary/60"
+      >
+        <FileSpreadsheet className="h-8 w-8 mx-auto mb-2 opacity-40" />
+        <p className="text-sm">Drop Excel file here or click to paste data</p>
+      </div>
+
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : lists.length === 0 ? <p className="text-sm text-muted-foreground">No loading lists yet.</p> : (
+        <div className="space-y-3">
+          {lists.map(entry => (
+            <Card key={entry.id} className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-sm">{entry.title || 'Untitled'}</h4>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(entry)}><Edit2 className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteList(entry.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+              <div className="overflow-auto max-h-48 text-xs border rounded">
+                <Table>
+                  <TableBody>
+                    {(entry.data as any[][]).slice(0, 20).map((row, ri) => (
+                      <TableRow key={ri}>
+                        {row.map((cell: any, ci: number) => (
+                          ri === 0
+                            ? <TableHead key={ci} className="px-2 py-1 text-xs font-bold whitespace-nowrap">{cell ?? ''}</TableHead>
+                            : <TableCell key={ci} className="px-2 py-1 whitespace-nowrap">{cell ?? ''}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {(entry.data as any[][]).length > 20 && <p className="text-xs text-muted-foreground mt-1">Showing 20 of {entry.data.length} rows</p>}
+              <p className="text-xs text-muted-foreground mt-1">{new Date(entry.created_at).toLocaleString()}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{editId ? 'Edit' : 'New'} Loading List</DialogTitle>
+          </DialogHeader>
+          <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" className="mb-2" />
+          <div className="flex-1 overflow-auto border rounded text-xs">
+            <Table>
+              <TableBody>
+                {editData.map((row, ri) => (
+                  <TableRow key={ri}>
+                    {row.map((cell: any, ci: number) => (
+                      <TableCell key={ci} className="p-0">
+                        <input
+                          className="w-full px-2 py-1 text-xs border-0 bg-transparent focus:outline-none focus:bg-accent/30"
+                          value={cell ?? ''}
+                          onChange={e => updateCell(ri, ci, e.target.value)}
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+            <Button onClick={saveList}><Save className="h-4 w-4 mr-1" /> Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ───── Notes Tab ───── */
+
+interface NoteEntry {
+  id: string;
+  title: string;
+  content: string;
+  attachments: string[];
+  created_at: string;
+}
+
+function NotesTab() {
+  const { user } = useAuth();
+  const [notes, setNotes] = useState<NoteEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editAttachments, setEditAttachments] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchNotes = useCallback(async () => {
+    const { data } = await supabase
+      .from('important_notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setNotes((data ?? []).map((d: any) => ({ ...d, attachments: Array.isArray(d.attachments) ? d.attachments : [] })));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchNotes(); }, [fetchNotes]);
+
+  const handleFileUpload = async (file: File) => {
+    const ext = file.name.split('.').pop();
+    const path = `notes/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('attachments').upload(path, file);
+    if (error) {
+      // Bucket might not exist - try creating
+      await supabase.storage.createBucket('attachments', { public: true });
+      const { error: err2 } = await supabase.storage.from('attachments').upload(path, file);
+      if (err2) { toast.error('Upload failed'); return; }
+    }
+    const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+    setEditAttachments(prev => [...prev, urlData.publicUrl]);
+    toast.success('File attached');
+  };
+
+  const saveNote = async () => {
+    if (!editTitle.trim() && !editContent.trim()) { toast.error('Enter title or content'); return; }
+    if (editId) {
+      await supabase.from('important_notes').update({ title: editTitle, content: editContent, attachments: editAttachments as any, updated_at: new Date().toISOString() }).eq('id', editId);
+      toast.success('Updated');
+    } else {
+      await supabase.from('important_notes').insert({ title: editTitle, content: editContent, attachments: editAttachments as any, created_by: user?.id });
+      toast.success('Saved');
+    }
+    setShowDialog(false);
+    fetchNotes();
+  };
+
+  const deleteNote = async (id: string) => {
+    await supabase.from('important_notes').delete().eq('id', id);
+    toast.success('Deleted');
+    fetchNotes();
+  };
+
+  const openEdit = (note: NoteEntry) => {
+    setEditId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setEditAttachments(note.attachments);
+    setShowDialog(true);
+  };
+
+  const openNew = () => {
+    setEditId(null);
+    setEditTitle('');
+    setEditContent('');
+    setEditAttachments([]);
+    setShowDialog(true);
+  };
+
+  const removeAttachment = (idx: number) => {
+    setEditAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="space-y-4">
+      <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Note</Button>
+
+      {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : notes.length === 0 ? <p className="text-sm text-muted-foreground">No notes yet.</p> : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {notes.map(note => (
+            <Card key={note.id} className="p-3">
+              <div className="flex items-start justify-between mb-1">
+                <h4 className="font-semibold text-sm truncate flex-1">{note.title || 'Untitled'}</h4>
+                <div className="flex gap-1 ml-2">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(note)}><Edit2 className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteNote(note.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-4">{note.content}</p>
+              {note.attachments.length > 0 && (
+                <div className="flex gap-1 mt-2 flex-wrap">
+                  {note.attachments.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                      {/\.(jpg|jpeg|png|gif|webp)$/i.test(url)
+                        ? <img src={url} alt="" className="h-12 w-12 object-cover rounded border" />
+                        : <div className="h-12 w-12 rounded border flex items-center justify-center bg-muted"><Upload className="h-4 w-4" /></div>
+                      }
+                    </a>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">{new Date(note.created_at).toLocaleString()}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editId ? 'Edit' : 'New'} Note</DialogTitle>
+          </DialogHeader>
+          <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" />
+          <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} placeholder="Write your note..." rows={6} />
+          <div className="space-y-2">
+            <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+              <Image className="h-4 w-4 mr-1" /> Attach File/Photo
+            </Button>
+            <input ref={fileRef} type="file" className="hidden" onChange={e => { if (e.target.files?.[0]) handleFileUpload(e.target.files[0]); e.target.value = ''; }} />
+            {editAttachments.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {editAttachments.map((url, i) => (
+                  <div key={i} className="relative group">
+                    {/\.(jpg|jpeg|png|gif|webp)$/i.test(url)
+                      ? <img src={url} alt="" className="h-16 w-16 object-cover rounded border" />
+                      : <div className="h-16 w-16 rounded border flex items-center justify-center bg-muted text-xs">File</div>
+                    }
+                    <button onClick={() => removeAttachment(i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-3 w-3" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+            <Button onClick={saveNote}><Save className="h-4 w-4 mr-1" /> Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ───── Main Page ───── */
+
+export default function ImportantNotesPage() {
+  return (
+    <div className="p-4 md:p-6 space-y-4">
+      <h1 className="text-xl font-bold flex items-center gap-2">
+        <StickyNote className="h-5 w-5" /> Important Notes
+      </h1>
+      <Tabs defaultValue="recent-loading-lists">
+        <TabsList>
+          <TabsTrigger value="recent-loading-lists">
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Recent Loading Lists
+          </TabsTrigger>
+          <TabsTrigger value="notes">
+            <StickyNote className="h-4 w-4 mr-1" /> Notes
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="recent-loading-lists">
+          <RecentLoadingLists />
+        </TabsContent>
+        <TabsContent value="notes">
+          <NotesTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
