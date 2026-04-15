@@ -1,26 +1,34 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useStore } from '@/store/useStore';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function DataLoader({ children }: { children: React.ReactNode }) {
   const { fetchAll, loaded } = useStore();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedFetchAll = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchAll();
+    }, 1000);
+  }, [fetchAll]);
 
   useEffect(() => {
     fetchAll();
 
-    // Subscribe to realtime changes on all data tables
     const channel = supabase
       .channel('all-data-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'consignments' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'loading_list_entries' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'old_nylam_goods' }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'remaining_ctns' }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'consignments' }, () => debouncedFetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'loading_list_entries' }, () => debouncedFetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'old_nylam_goods' }, () => debouncedFetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'remaining_ctns' }, () => debouncedFetchAll())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [fetchAll]);
+  }, [fetchAll, debouncedFetchAll]);
 
   if (!loaded) {
     return (
