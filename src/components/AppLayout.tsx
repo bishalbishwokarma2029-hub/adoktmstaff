@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         collapsed ? "w-16" : "w-64"
       )} style={{ background: 'hsl(215 60% 95%)', borderColor: 'hsl(215 40% 85%)' }}>
         <div className={cn("flex flex-col items-center justify-center border-b px-2", collapsed ? "py-3" : "py-5")} style={{ borderColor: 'hsl(215 40% 85%)' }}>
-          <img src={adoLogo} alt="ADO International" className={cn("object-contain", collapsed ? "h-14 w-14" : "h-28 w-full max-w-[250px]")} />
+          <img src={adoLogo} alt="ADO International" className={cn("object-contain", collapsed ? "h-16 w-16" : "h-36 w-full max-w-[280px]")} />
           {!collapsed && <span className="text-xs font-extrabold tracking-wide text-primary mt-2 text-center leading-tight">ADO International Transport Nepal</span>}
         </div>
 
