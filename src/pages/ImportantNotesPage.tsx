@@ -8,9 +8,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+
+/* ───── helpers ───── */
+
+interface ProfileMap { [userId: string]: string }
+
+async function fetchProfiles(): Promise<ProfileMap> {
+  const { data } = await supabase.from('profiles').select('user_id, display_name, email');
+  const map: ProfileMap = {};
+  (data ?? []).forEach((p: any) => { map[p.user_id] = p.display_name || p.email || 'Unknown'; });
+  return map;
+}
+
+function userName(profiles: ProfileMap, id: string | null | undefined) {
+  if (!id) return '—';
+  return profiles[id] || 'Unknown';
+}
 
 /* ───── Recent Loading Lists Tab ───── */
 
@@ -18,10 +34,14 @@ interface LoadingListEntry {
   id: string;
   title: string | null;
   data: any[][];
+  file_url: string | null;
+  created_by: string | null;
+  updated_by: string | null;
   created_at: string;
+  updated_at: string;
 }
 
-function RecentLoadingLists() {
+function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   const { user } = useAuth();
   const [lists, setLists] = useState<LoadingListEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +50,18 @@ function RecentLoadingLists() {
   const [editData, setEditData] = useState<any[][]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
 
   const fetchLists = useCallback(async () => {
     const { data } = await supabase
       .from('recent_loading_lists')
       .select('*')
       .order('created_at', { ascending: false });
-    setLists((data ?? []).map((d: any) => ({ ...d, data: Array.isArray(d.data) ? d.data : [] })));
+    setLists((data ?? []).map((d: any) => ({
+      ...d,
+      data: Array.isArray(d.data) ? d.data : [],
+      file_url: d.file_url ?? null,
+      updated_by: d.updated_by ?? null,
+    })));
     setLoading(false);
   }, []);
 
@@ -50,12 +74,26 @@ function RecentLoadingLists() {
         try {
           const wb = XLSX.read(e.target?.result, { type: 'array' });
           const ws = wb.Sheets[wb.SheetNames[0]];
-          const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
-          resolve(rows);
+          resolve(XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][]);
         } catch { reject(new Error('Failed to parse excel')); }
       };
       reader.readAsArrayBuffer(file);
     });
+
+  const uploadExcelToStorage = async (rows: any[][], title: string): Promise<string | null> => {
+    try {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const path = `loading-lists/${Date.now()}_${Math.random().toString(36).slice(2)}.xlsx`;
+      const { error } = await supabase.storage.from('attachments').upload(path, blob);
+      if (error) return null;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      return urlData.publicUrl;
+    } catch { return null; }
+  };
 
   const handleFile = async (file: File) => {
     try {
@@ -88,11 +126,24 @@ function RecentLoadingLists() {
 
   const saveList = async () => {
     if (!editData.length) { toast.error('No data'); return; }
+    const fileUrl = await uploadExcelToStorage(editData, editTitle);
     if (editId) {
-      await supabase.from('recent_loading_lists').update({ title: editTitle, data: editData as any, updated_at: new Date().toISOString() }).eq('id', editId);
+      await supabase.from('recent_loading_lists').update({
+        title: editTitle,
+        data: editData as any,
+        file_url: fileUrl,
+        updated_by: user?.id,
+        updated_at: new Date().toISOString(),
+      } as any).eq('id', editId);
       toast.success('Updated');
     } else {
-      await supabase.from('recent_loading_lists').insert({ title: editTitle, data: editData as any, created_by: user?.id });
+      await supabase.from('recent_loading_lists').insert({
+        title: editTitle,
+        data: editData as any,
+        file_url: fileUrl,
+        created_by: user?.id,
+        updated_by: user?.id,
+      } as any);
       toast.success('Saved');
     }
     setShowDialog(false);
@@ -131,7 +182,6 @@ function RecentLoadingLists() {
       </div>
 
       <div
-        ref={dropRef}
         onDragOver={e => e.preventDefault()}
         onDrop={handleDrop}
         onPaste={handlePaste}
@@ -149,6 +199,11 @@ function RecentLoadingLists() {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-semibold text-sm">{entry.title || 'Untitled'}</h4>
                 <div className="flex gap-1">
+                  {entry.file_url && (
+                    <a href={entry.file_url} download>
+                      <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
+                    </a>
+                  )}
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(entry)}><Edit2 className="h-3.5 w-3.5" /></Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteList(entry.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
@@ -169,7 +224,12 @@ function RecentLoadingLists() {
                 </Table>
               </div>
               {(entry.data as any[][]).length > 20 && <p className="text-xs text-muted-foreground mt-1">Showing 20 of {entry.data.length} rows</p>}
-              <p className="text-xs text-muted-foreground mt-1">{new Date(entry.created_at).toLocaleString()}</p>
+              <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                <p>Created by: <strong>{userName(profiles, entry.created_by)}</strong> — {new Date(entry.created_at).toLocaleString()}</p>
+                {entry.updated_by && entry.updated_by !== entry.created_by && (
+                  <p>Updated by: <strong>{userName(profiles, entry.updated_by)}</strong> — {new Date(entry.updated_at).toLocaleString()}</p>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -217,10 +277,13 @@ interface NoteEntry {
   title: string;
   content: string;
   attachments: string[];
+  created_by: string | null;
+  updated_by: string | null;
   created_at: string;
+  updated_at: string;
 }
 
-function NotesTab() {
+function NotesTab({ profiles }: { profiles: ProfileMap }) {
   const { user } = useAuth();
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,7 +299,11 @@ function NotesTab() {
       .from('important_notes')
       .select('*')
       .order('created_at', { ascending: false });
-    setNotes((data ?? []).map((d: any) => ({ ...d, attachments: Array.isArray(d.attachments) ? d.attachments : [] })));
+    setNotes((data ?? []).map((d: any) => ({
+      ...d,
+      attachments: Array.isArray(d.attachments) ? d.attachments : [],
+      updated_by: d.updated_by ?? null,
+    })));
     setLoading(false);
   }, []);
 
@@ -246,12 +313,7 @@ function NotesTab() {
     const ext = file.name.split('.').pop();
     const path = `notes/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from('attachments').upload(path, file);
-    if (error) {
-      // Bucket might not exist - try creating
-      await supabase.storage.createBucket('attachments', { public: true });
-      const { error: err2 } = await supabase.storage.from('attachments').upload(path, file);
-      if (err2) { toast.error('Upload failed'); return; }
-    }
+    if (error) { toast.error('Upload failed'); return; }
     const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
     setEditAttachments(prev => [...prev, urlData.publicUrl]);
     toast.success('File attached');
@@ -260,10 +322,22 @@ function NotesTab() {
   const saveNote = async () => {
     if (!editTitle.trim() && !editContent.trim()) { toast.error('Enter title or content'); return; }
     if (editId) {
-      await supabase.from('important_notes').update({ title: editTitle, content: editContent, attachments: editAttachments as any, updated_at: new Date().toISOString() }).eq('id', editId);
+      await supabase.from('important_notes').update({
+        title: editTitle,
+        content: editContent,
+        attachments: editAttachments as any,
+        updated_by: user?.id,
+        updated_at: new Date().toISOString(),
+      } as any).eq('id', editId);
       toast.success('Updated');
     } else {
-      await supabase.from('important_notes').insert({ title: editTitle, content: editContent, attachments: editAttachments as any, created_by: user?.id });
+      await supabase.from('important_notes').insert({
+        title: editTitle,
+        content: editContent,
+        attachments: editAttachments as any,
+        created_by: user?.id,
+        updated_by: user?.id,
+      } as any);
       toast.success('Saved');
     }
     setShowDialog(false);
@@ -324,7 +398,12 @@ function NotesTab() {
                   ))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground mt-2">{new Date(note.created_at).toLocaleString()}</p>
+              <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                <p>Created by: <strong>{userName(profiles, note.created_by)}</strong> — {new Date(note.created_at).toLocaleString()}</p>
+                {note.updated_by && note.updated_by !== note.created_by && (
+                  <p>Updated by: <strong>{userName(profiles, note.updated_by)}</strong> — {new Date(note.updated_at).toLocaleString()}</p>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -369,6 +448,12 @@ function NotesTab() {
 /* ───── Main Page ───── */
 
 export default function ImportantNotesPage() {
+  const [profiles, setProfiles] = useState<ProfileMap>({});
+
+  useEffect(() => {
+    fetchProfiles().then(setProfiles);
+  }, []);
+
   return (
     <div className="p-4 md:p-6 space-y-4">
       <h1 className="text-xl font-bold flex items-center gap-2">
@@ -384,10 +469,10 @@ export default function ImportantNotesPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="recent-loading-lists">
-          <RecentLoadingLists />
+          <RecentLoadingLists profiles={profiles} />
         </TabsContent>
         <TabsContent value="notes">
-          <NotesTab />
+          <NotesTab profiles={profiles} />
         </TabsContent>
       </Tabs>
     </div>
