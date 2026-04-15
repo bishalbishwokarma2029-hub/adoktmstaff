@@ -29,6 +29,7 @@ export type Database = {
           remarks: string | null
           status: string | null
           total_ctn: number | null
+          updated_at: string
           updated_by: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           remarks?: string | null
           status?: string | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Update: {
@@ -61,6 +63,7 @@ export type Database = {
           remarks?: string | null
           status?: string | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Relationships: []
@@ -94,6 +97,7 @@ export type Database = {
           status: string | null
           tatopani: Json | null
           total_ctn: number | null
+          updated_at: string
           updated_by: string
         }
         Insert: {
@@ -124,6 +128,7 @@ export type Database = {
           status?: string | null
           tatopani?: Json | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Update: {
@@ -154,6 +159,7 @@ export type Database = {
           status?: string | null
           tatopani?: Json | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Relationships: []
@@ -177,6 +183,7 @@ export type Database = {
           marka: string | null
           nylam_container: string | null
           total_ctn: number | null
+          updated_at: string
         }
         Insert: {
           arrival_date?: string | null
@@ -196,6 +203,7 @@ export type Database = {
           marka?: string | null
           nylam_container?: string | null
           total_ctn?: number | null
+          updated_at?: string
         }
         Update: {
           arrival_date?: string | null
@@ -215,6 +223,7 @@ export type Database = {
           marka?: string | null
           nylam_container?: string | null
           total_ctn?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -257,6 +266,7 @@ export type Database = {
           remaining_ctn: number | null
           remaining_ctn_location: string | null
           total_ctn: number | null
+          updated_at: string
           updated_by: string
         }
         Insert: {
@@ -273,6 +283,7 @@ export type Database = {
           remaining_ctn?: number | null
           remaining_ctn_location?: string | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Update: {
@@ -289,6 +300,7 @@ export type Database = {
           remaining_ctn?: number | null
           remaining_ctn_location?: string | null
           total_ctn?: number | null
+          updated_at?: string
           updated_by?: string
         }
         Relationships: []
