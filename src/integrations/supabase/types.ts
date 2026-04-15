@@ -14,16 +14,322 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consignments: {
+        Row: {
+          cbm: number | null
+          client: string | null
+          consignment_no: string
+          created_at: string
+          created_by: string
+          date: string | null
+          destination: string | null
+          gw: number | null
+          id: string
+          marka: string | null
+          remarks: string | null
+          status: string | null
+          total_ctn: number | null
+          updated_by: string
+        }
+        Insert: {
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          gw?: number | null
+          id?: string
+          marka?: string | null
+          remarks?: string | null
+          status?: string | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Update: {
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          gw?: number | null
+          id?: string
+          marka?: string | null
+          remarks?: string | null
+          status?: string | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      loading_list_entries: {
+        Row: {
+          arrival_at_lhasa: string | null
+          arrival_date_nylam: string | null
+          cbm: number | null
+          client: string | null
+          consignment_no: string
+          container: string | null
+          created_at: string
+          created_by: string
+          date: string | null
+          destination: string | null
+          dispatched_from: string | null
+          dispatched_from_lhasa: string | null
+          follow_up: boolean | null
+          gw: number | null
+          id: string
+          kerung: Json | null
+          lhasa_container: string | null
+          lot_no: string | null
+          marka: string | null
+          missing_ctn: number | null
+          on_the_way: number | null
+          origin: string
+          remaining_ctn_nylam: number | null
+          remarks: string | null
+          status: string | null
+          tatopani: Json | null
+          total_ctn: number | null
+          updated_by: string
+        }
+        Insert: {
+          arrival_at_lhasa?: string | null
+          arrival_date_nylam?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          container?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          dispatched_from?: string | null
+          dispatched_from_lhasa?: string | null
+          follow_up?: boolean | null
+          gw?: number | null
+          id?: string
+          kerung?: Json | null
+          lhasa_container?: string | null
+          lot_no?: string | null
+          marka?: string | null
+          missing_ctn?: number | null
+          on_the_way?: number | null
+          origin?: string
+          remaining_ctn_nylam?: number | null
+          remarks?: string | null
+          status?: string | null
+          tatopani?: Json | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Update: {
+          arrival_at_lhasa?: string | null
+          arrival_date_nylam?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          container?: string | null
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          dispatched_from?: string | null
+          dispatched_from_lhasa?: string | null
+          follow_up?: boolean | null
+          gw?: number | null
+          id?: string
+          kerung?: Json | null
+          lhasa_container?: string | null
+          lot_no?: string | null
+          marka?: string | null
+          missing_ctn?: number | null
+          on_the_way?: number | null
+          origin?: string
+          remaining_ctn_nylam?: number | null
+          remarks?: string | null
+          status?: string | null
+          tatopani?: Json | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      old_nylam_goods: {
+        Row: {
+          arrival_date: string | null
+          arrival_location: string | null
+          cbm: number | null
+          client: string | null
+          consignment_no: string
+          created_at: string
+          ctn_remaining_nylam: number | null
+          date: string | null
+          destination: string | null
+          dispatched_from_nylam: string | null
+          follow_up: boolean | null
+          gw: number | null
+          id: string
+          loaded_ctn: number | null
+          marka: string | null
+          nylam_container: string | null
+          total_ctn: number | null
+        }
+        Insert: {
+          arrival_date?: string | null
+          arrival_location?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          ctn_remaining_nylam?: number | null
+          date?: string | null
+          destination?: string | null
+          dispatched_from_nylam?: string | null
+          follow_up?: boolean | null
+          gw?: number | null
+          id?: string
+          loaded_ctn?: number | null
+          marka?: string | null
+          nylam_container?: string | null
+          total_ctn?: number | null
+        }
+        Update: {
+          arrival_date?: string | null
+          arrival_location?: string | null
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          ctn_remaining_nylam?: number | null
+          date?: string | null
+          destination?: string | null
+          dispatched_from_nylam?: string | null
+          follow_up?: boolean | null
+          gw?: number | null
+          id?: string
+          loaded_ctn?: number | null
+          marka?: string | null
+          nylam_container?: string | null
+          total_ctn?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      remaining_ctns: {
+        Row: {
+          cbm: number | null
+          client: string | null
+          consignment_no: string
+          created_at: string
+          created_by: string
+          date: string | null
+          destination: string | null
+          gw: number | null
+          id: string
+          marka: string | null
+          remaining_ctn: number | null
+          remaining_ctn_location: string | null
+          total_ctn: number | null
+          updated_by: string
+        }
+        Insert: {
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          gw?: number | null
+          id?: string
+          marka?: string | null
+          remaining_ctn?: number | null
+          remaining_ctn_location?: string | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Update: {
+          cbm?: number | null
+          client?: string | null
+          consignment_no?: string
+          created_at?: string
+          created_by?: string
+          date?: string | null
+          destination?: string | null
+          gw?: number | null
+          id?: string
+          marka?: string | null
+          remaining_ctn?: number | null
+          remaining_ctn_location?: string | null
+          total_ctn?: number | null
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +456,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "staff"],
+    },
   },
 } as const
