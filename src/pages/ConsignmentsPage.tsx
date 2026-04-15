@@ -45,58 +45,31 @@ export default function ConsignmentsPage() {
   };
 
   const handleExport = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const COMPANY_HEADER: any[][] = [
-      ['', '', '', '', '义乌市阿卓国际供应链管理有限公司'],
-      ['', '', '', '', 'ADO INTERNATIONAL SUPPLY CHAIN MANAGEMENT CO LTD'],
-      ['', '', '', '', '广东省广州市白云区石井镇凰岗村领龙国际1F001档'],
-      ['', 'Nepal: +977 9851067385 / 9851066781', '', '', '', '', 'Chinese Speaking Mobile: +8613322519322'],
-      ['', 'Kerung: +8613889021731', '', '', '', '', 'Nepali Speaking Mobile: +8619908916803'],
-      ['', 'Tatopani: +977 9846207176', '', '', '', '', 'Email: 1973459072@qq.com'],
-      ['', 'Lhasa: +8613728961850', '', '', '', '', 'Kathmandu'],
-      [],
-      ['', 'Lot No. :-', '', '', '', 'Car No. :-', '', '', '', '', 'Date :- ' + today],
-      [],
-      ['', '', '', '', '', '', 'Warehouse Loading'],
-      [],
-    ];
     const toExport = selected.size > 0
       ? consignments.filter(c => selected.has(c.id))
       : filtered;
 
-    const headers = ['Consignment Date', 'Consignment No', 'Client Name', 'Marka', 'T.CTNS', 'T.CBM', 'T.GW', 'Freight', 'Insurance', 'Tax', 'Other Charges', 'Amount', 'Port', 'Delivery Status', 'Billed Status', 'Remarks'];
+    const headers = ['Consignment Date', 'Consignment No', 'Client Name', 'Marka', 'T.CTNS', 'T.CBM', 'T.GW', 'Destination', 'Status', 'Remarks'];
     const rows = toExport.map(c => [
-      c.date, c.consignmentNo, c.client, c.marka, c.totalCTN, c.cbm, c.gw,
-      '', '', '', '', '', c.destination, c.status, '', c.remarks
+      c.date, c.consignmentNo, c.client, c.marka, c.totalCTN, c.cbm, c.gw, c.destination, c.status, c.remarks
     ]);
 
     const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(COMPANY_HEADER);
-    const startRow = COMPANY_HEADER.length;
-    XLSX.utils.sheet_add_aoa(ws, [headers], { origin: `A${startRow + 1}` });
-    XLSX.utils.sheet_add_aoa(ws, rows, { origin: `A${startRow + 2}` });
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
 
     const totalCols = headers.length;
-    const totalRows = startRow + 1 + rows.length;
-    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: totalRows, c: totalCols - 1 } });
+    const totalRows = rows.length + 1;
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } });
 
-    // Bold headers and center all data
     for (let C = 0; C < totalCols; C++) {
-      const headerCell = XLSX.utils.encode_cell({ r: startRow, c: C });
+      const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
       if (ws[headerCell]) ws[headerCell].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
-      for (let R = startRow + 1; R <= totalRows; R++) {
+      for (let R = 1; R < totalRows; R++) {
         const cell = XLSX.utils.encode_cell({ r: R, c: C });
         if (ws[cell]) ws[cell].s = { alignment: { horizontal: 'center' } };
       }
     }
-    // Bold header area
-    for (let R = 0; R < startRow; R++) {
-      for (let C = 0; C < totalCols; C++) {
-        const cell = XLSX.utils.encode_cell({ r: R, c: C });
-        if (ws[cell]) ws[cell].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
-      }
-    }
-    ws['!cols'] = Array.from({ length: totalCols }, () => ({ wch: 16 }));
+    ws['!cols'] = Array.from({ length: totalCols }, () => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, ws, 'Consignments');
     XLSX.writeFile(wb, 'consignments.xlsx');
   };

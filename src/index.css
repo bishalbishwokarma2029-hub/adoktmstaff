@@ -107,13 +107,14 @@
     color: hsl(20 80% 30%);
   }
   .table-container thead th {
-    @apply border-b-2 border-[hsl(var(--primary)/0.15)] text-foreground sticky top-0 z-20;
-    background-color: hsl(210 20% 98%) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    @apply border-b-2 border-[hsl(var(--primary)/0.15)] font-bold sticky top-0 z-20;
+    background-color: hsl(48 100% 72%) !important;
+    color: hsl(220 20% 10%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   .table-container thead th.highlight-field {
-    background-color: hsl(45 100% 65%) !important;
-    color: hsl(20 80% 25%);
+    background-color: hsl(45 100% 55%) !important;
+    color: hsl(20 80% 20%);
   }
   .status-badge {
     @apply px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap;
