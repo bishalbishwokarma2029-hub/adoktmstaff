@@ -309,9 +309,9 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-0 z-30 min-w-[120px]">Consignment No.</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[120px] z-30">MARKA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[200px] z-30">Total CTNS</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Date</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">CBM</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">GW</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px]">Date</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">CBM</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">GW</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Destination</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">LOT No.</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from {cityName}</th>
