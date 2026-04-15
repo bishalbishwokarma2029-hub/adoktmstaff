@@ -20,6 +20,17 @@ export default function ContainerDetailPage() {
 
   const decodedContainer = containerNo ? decodeURIComponent(containerNo) : '';
 
+  // Determine if this container is origin (Guangzhou/Yiwu) or Nylam-dispatched
+  const containerType = useMemo(() => {
+    if (!decodedContainer) return 'origin';
+    for (const e of allEntries) {
+      if (e.container === decodedContainer) return 'origin';
+      if (e.kerung.some(k => k.nylamContainer === decodedContainer)) return 'kerung';
+      if (e.tatopani.some(t => t.nylamContainer === decodedContainer)) return 'tatopani';
+    }
+    return 'origin';
+  }, [allEntries, decodedContainer]);
+
   const entries = useMemo(() => {
     if (!decodedContainer) return [];
     const result: typeof allEntries = [];
@@ -31,11 +42,24 @@ export default function ContainerDetailPage() {
     return result;
   }, [allEntries, decodedContainer]);
 
-  // Calculate loaded CTN for each entry from loading lists
+  // Calculate loaded CTN based on container type
   const getLoadedCTN = (entry: typeof allEntries[0]) => {
+    if (containerType === 'origin') {
+      // Dispatched from Guangzhou/Yiwu: Loaded CTN = Total CTN
+      return entry.totalCTN || null;
+    }
+    // Dispatched from Nylam: sum loadedCTN from the relevant expandable section
     let loaded = 0;
-    entry.tatopani.forEach(t => { if (t.loadedCTN) loaded += t.loadedCTN; });
-    entry.kerung.forEach(k => { if (k.loadedCTN) loaded += k.loadedCTN; });
+    if (containerType === 'tatopani') {
+      entry.tatopani.forEach(t => {
+        if (t.nylamContainer === decodedContainer && t.loadedCTN) loaded += t.loadedCTN;
+      });
+    }
+    if (containerType === 'kerung') {
+      entry.kerung.forEach(k => {
+        if (k.nylamContainer === decodedContainer && k.loadedCTN) loaded += k.loadedCTN;
+      });
+    }
     return loaded || null;
   };
 
