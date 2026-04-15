@@ -5,10 +5,22 @@ import { supabase } from '@/integrations/supabase/client';
 const db = supabase as any;
 import type { Consignment, LoadingListEntry, OldNylamEntry, RemainingCTNEntry, KerungDetails, TatopaniDetails } from '@/types';
 
+let cachedEmail: string | null = null;
+let emailPromise: Promise<string> | null = null;
+
 async function getCurrentUserEmail(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  return data?.user?.email || '';
+  if (cachedEmail) return cachedEmail;
+  if (emailPromise) return emailPromise;
+  emailPromise = supabase.auth.getUser().then(({ data }) => {
+    cachedEmail = data?.user?.email || '';
+    emailPromise = null;
+    return cachedEmail;
+  });
+  return emailPromise;
 }
+
+// Clear cache on auth state change
+supabase.auth.onAuthStateChange(() => { cachedEmail = null; });
 
 interface AppStore {
   consignments: Consignment[];

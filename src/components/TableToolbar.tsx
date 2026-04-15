@@ -158,10 +158,11 @@ export default function TableToolbar({
       </Button>
 
       {masterEditContent && selectMode && selectedCount > 0 && (
+        <Button variant="secondary" size="sm" onClick={() => setMasterEditOpen(true)}><Edit className="h-3.5 w-3.5 mr-1" />Master Edit</Button>
+      )}
+
+      {masterEditContent && (
         <Dialog open={masterEditOpen} onOpenChange={setMasterEditOpen}>
-          <DialogTrigger asChild>
-            <Button variant="secondary" size="sm"><Edit className="h-3.5 w-3.5 mr-1" />Master Edit</Button>
-          </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle className="font-bold">Master Edit ({selectedCount} items)</DialogTitle></DialogHeader>
             {masterEditContent}
