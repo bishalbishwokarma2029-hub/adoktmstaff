@@ -107,8 +107,9 @@
     color: hsl(20 80% 30%);
   }
   .table-container thead th {
-    @apply border-b-2 border-[hsl(var(--primary)/0.15)] text-foreground;
-    background-color: hsl(var(--primary) / 0.08) !important;
+    @apply border-b-2 border-[hsl(var(--primary)/0.15)] text-foreground sticky top-0 z-20;
+    background-color: hsl(210 20% 98%) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
   }
   .table-container thead th.highlight-field {
     background-color: hsl(45 100% 65%) !important;

@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      important_notes: {
+        Row: {
+          attachments: Json | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loading_list_entries: {
         Row: {
           arrival_at_lhasa: string | null
@@ -248,6 +278,33 @@ export type Database = {
           email?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      recent_loading_lists: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
