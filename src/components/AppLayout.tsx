@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ClipboardList, Container, Layers,
-  Box, Users, Radar, ChevronLeft, ChevronRight, Shield, LogOut
+  Box, Users, Radar, ChevronLeft, ChevronRight, Shield, LogOut, StickyNote
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,6 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { path: '/remaining-ctns', label: 'Remaining CTNs', icon: Box },
     { path: '/party-followup', label: 'Party Follow Up', icon: Users },
     { path: '/tracking', label: 'Tracking System', icon: Radar },
+    { path: '/important-notes', label: 'Important Notes', icon: StickyNote },
     ...(isAdmin ? [{ path: '/admin', label: 'Admin Panel', icon: Shield }] : []),
   ];
 

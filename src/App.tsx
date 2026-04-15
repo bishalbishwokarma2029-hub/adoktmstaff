@@ -19,6 +19,7 @@ import RemainingCTNsPage from "@/pages/RemainingCTNsPage";
 import PartyFollowUpPage from "@/pages/PartyFollowUpPage";
 import TrackingPage from "@/pages/TrackingPage";
 import AdminPage from "@/pages/AdminPage";
+import ImportantNotesPage from "@/pages/ImportantNotesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ function ProtectedRoutes() {
           <Route path="/remaining-ctns" element={<RemainingCTNsPage />} />
           <Route path="/party-followup" element={<PartyFollowUpPage />} />
           <Route path="/tracking" element={<TrackingPage />} />
+          <Route path="/important-notes" element={<ImportantNotesPage />} />
           <Route path="/admin" element={isAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
