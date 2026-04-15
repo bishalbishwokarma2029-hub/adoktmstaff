@@ -28,7 +28,7 @@ export default function ContainersPage() {
     const map = new Map<string, { containerNo: string; entries: typeof allEntries; dispatchedFrom: string; dispatchedDate: string; arrivalDate: string; arrivalLocation: string; type: 'origin' | 'kerung' | 'tatopani' }>();
     allEntries.forEach(e => {
       if (e.container) {
-        if (!map.has(e.container)) map.set(e.container, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: e.dispatchedFrom, arrivalDate: '', arrivalLocation: '', type: 'origin' });
+        if (!map.has(e.container)) map.set(e.container, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: e.dispatchedFrom, arrivalDate: e.arrivalDateNylam || '', arrivalLocation: e.arrivalDateNylam ? 'Nylam' : '', type: 'origin' });
         map.get(e.container)!.entries.push(e);
       }
       e.kerung.forEach(k => {
