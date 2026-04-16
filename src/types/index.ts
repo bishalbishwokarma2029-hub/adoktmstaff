@@ -148,6 +148,7 @@ export function getStatusClass(status: string): string {
   if (status.includes('Nylam')) return 'status-nylam';
   if (status.includes('Tatopani')) return 'status-tatopani';
   if (status.includes('Kerung')) return 'status-kerung';
+  if (status.includes('Delivered')) return 'status-delivered';
   if (status.includes('way')) return 'status-onway';
   return '';
 }
