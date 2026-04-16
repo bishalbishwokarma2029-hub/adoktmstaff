@@ -28,23 +28,31 @@ export default function ContainersPage() {
     const map = new Map<string, { containerNo: string; entries: typeof allEntries; dispatchedFrom: string; dispatchedDate: string; arrivalDate: string; arrivalLocation: string; type: 'origin' | 'kerung' | 'tatopani' }>();
     allEntries.forEach(e => {
       if (e.container) {
-        if (!map.has(e.container)) map.set(e.container, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: e.dispatchedFrom, arrivalDate: e.arrivalDateNylam || '', arrivalLocation: e.arrivalDateNylam ? 'Nylam' : '', type: 'origin' });
-        map.get(e.container)!.entries.push(e);
+        const key = `origin:${e.container}`;
+        if (!map.has(key)) map.set(key, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: e.dispatchedFrom, arrivalDate: e.arrivalDateNylam || '', arrivalLocation: e.arrivalDateNylam ? 'Nylam' : '', type: 'origin' });
+        map.get(key)!.entries.push(e);
       }
       e.kerung.forEach(k => {
         if (k.nylamContainer) {
-          if (!map.has(k.nylamContainer)) map.set(k.nylamContainer, { containerNo: k.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: k.dispatchedFromNylam, arrivalDate: k.arrivalDate, arrivalLocation: 'Kerung', type: 'kerung' });
-          map.get(k.nylamContainer)!.entries.push(e);
+          const key = `kerung:${k.nylamContainer}`;
+          if (!map.has(key)) map.set(key, { containerNo: k.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: k.dispatchedFromNylam, arrivalDate: k.arrivalDate, arrivalLocation: 'Kerung', type: 'kerung' });
+          map.get(key)!.entries.push(e);
         }
       });
       e.tatopani.forEach(t => {
         if (t.nylamContainer) {
-          if (!map.has(t.nylamContainer)) map.set(t.nylamContainer, { containerNo: t.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: t.dispatchedFromNylam, arrivalDate: t.arrivalDate, arrivalLocation: 'Tatopani', type: 'tatopani' });
-          map.get(t.nylamContainer)!.entries.push(e);
+          const key = `tatopani:${t.nylamContainer}`;
+          if (!map.has(key)) map.set(key, { containerNo: t.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: t.dispatchedFromNylam, arrivalDate: t.arrivalDate, arrivalLocation: 'Tatopani', type: 'tatopani' });
+          map.get(key)!.entries.push(e);
         }
       });
     });
-    return Array.from(map.values());
+    // Sort by most recent dispatched date (descending)
+    return Array.from(map.values()).sort((a, b) => {
+      const dateA = a.dispatchedDate || '';
+      const dateB = b.dispatchedDate || '';
+      return dateB.localeCompare(dateA);
+    });
   }, [allEntries]);
 
   const filtered = useMemo(() =>
