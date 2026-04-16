@@ -155,20 +155,26 @@ export const useStore = create<AppStore>()((set, get) => ({
   loaded: false,
 
   fetchAll: async () => {
-    const [c, l, o, r] = await Promise.all([
-      db.from('consignments').select('*').order('created_at', { ascending: true }),
-      db.from('loading_list_entries').select('*').order('created_at', { ascending: true }),
-      db.from('old_nylam_goods').select('*').order('created_at', { ascending: true }),
-      db.from('remaining_ctns').select('*').order('created_at', { ascending: true }),
-    ]);
-    set({
-      consignments: (c.data || []).map(mapConsignmentFromDb),
-      loadingListGuangzhou: (l.data || []).filter((r: any) => r.origin === 'guangzhou').map(mapLoadingFromDb),
-      loadingListYiwu: (l.data || []).filter((r: any) => r.origin === 'yiwu').map(mapLoadingFromDb),
-      oldNylamGoods: (o.data || []).map(mapOldNylamFromDb),
-      remainingCTNs: (r.data || []).map(mapRemainingFromDb),
-      loaded: true,
-    });
+    try {
+      const [c, l, o, r] = await Promise.all([
+        db.from('consignments').select('*').order('created_at', { ascending: true }),
+        db.from('loading_list_entries').select('*').order('created_at', { ascending: true }),
+        db.from('old_nylam_goods').select('*').order('created_at', { ascending: true }),
+        db.from('remaining_ctns').select('*').order('created_at', { ascending: true }),
+      ]);
+      set({
+        consignments: (c.data || []).map(mapConsignmentFromDb),
+        loadingListGuangzhou: (l.data || []).filter((r: any) => r.origin === 'guangzhou').map(mapLoadingFromDb),
+        loadingListYiwu: (l.data || []).filter((r: any) => r.origin === 'yiwu').map(mapLoadingFromDb),
+        oldNylamGoods: (o.data || []).map(mapOldNylamFromDb),
+        remainingCTNs: (r.data || []).map(mapRemainingFromDb),
+        loaded: true,
+      });
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Still mark as loaded so the UI doesn't stay stuck on loading spinner
+      set({ loaded: true });
+    }
   },
 
   addConsignment: async (c) => {
