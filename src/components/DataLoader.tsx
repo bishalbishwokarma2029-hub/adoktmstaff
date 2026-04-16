@@ -16,16 +16,21 @@ export default function DataLoader({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     fetchAll();
 
-    const channel = supabase
-      .channel('all-data-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'consignments' }, () => debouncedFetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'loading_list_entries' }, () => debouncedFetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'old_nylam_goods' }, () => debouncedFetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'remaining_ctns' }, () => debouncedFetchAll())
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel('all-data-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'consignments' }, () => debouncedFetchAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'loading_list_entries' }, () => debouncedFetchAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'old_nylam_goods' }, () => debouncedFetchAll())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'remaining_ctns' }, () => debouncedFetchAll())
+        .subscribe();
+    } catch (err) {
+      console.error('Realtime subscription error:', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [fetchAll, debouncedFetchAll]);
