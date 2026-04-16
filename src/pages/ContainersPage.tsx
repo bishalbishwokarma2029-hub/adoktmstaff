@@ -28,22 +28,28 @@ export default function ContainersPage() {
     const map = new Map<string, { containerNo: string; entries: typeof allEntries; dispatchedFrom: string; dispatchedDate: string; arrivalDate: string; arrivalLocation: string; type: 'origin' | 'kerung' | 'tatopani' }>();
     allEntries.forEach(e => {
       if (e.container) {
-        const key = `origin:${e.container}:${e.dispatchedFrom || ''}`;
-        if (!map.has(key)) map.set(key, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: e.dispatchedFrom, arrivalDate: e.arrivalDateNylam || '', arrivalLocation: e.arrivalDateNylam ? 'Nylam' : '', type: 'origin' });
-        map.get(key)!.entries.push(e);
+        const date = e.dispatchedFrom || '';
+        const key = `origin:${e.container}:${date}`;
+        if (!map.has(key)) map.set(key, { containerNo: e.container, entries: [], dispatchedFrom: e.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu', dispatchedDate: date, arrivalDate: e.arrivalDateNylam || '', arrivalLocation: e.arrivalDateNylam ? 'Nylam' : '', type: 'origin' });
+        const existing = map.get(key)!;
+        if (!existing.entries.some(ex => ex.id === e.id)) existing.entries.push(e);
       }
       e.kerung.forEach(k => {
         if (k.nylamContainer) {
-          const key = `kerung:${k.nylamContainer}:${k.dispatchedFromNylam || ''}`;
-          if (!map.has(key)) map.set(key, { containerNo: k.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: k.dispatchedFromNylam, arrivalDate: k.arrivalDate, arrivalLocation: 'Kerung', type: 'kerung' });
-          map.get(key)!.entries.push(e);
+          const date = k.dispatchedFromNylam || '';
+          const key = `kerung:${k.nylamContainer}:${date}`;
+          if (!map.has(key)) map.set(key, { containerNo: k.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: date, arrivalDate: k.arrivalDate, arrivalLocation: 'Kerung', type: 'kerung' });
+          const existing = map.get(key)!;
+          if (!existing.entries.some(ex => ex.id === e.id)) existing.entries.push(e);
         }
       });
       e.tatopani.forEach(t => {
         if (t.nylamContainer) {
-          const key = `tatopani:${t.nylamContainer}:${t.dispatchedFromNylam || ''}`;
-          if (!map.has(key)) map.set(key, { containerNo: t.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: t.dispatchedFromNylam, arrivalDate: t.arrivalDate, arrivalLocation: 'Tatopani', type: 'tatopani' });
-          map.get(key)!.entries.push(e);
+          const date = t.dispatchedFromNylam || '';
+          const key = `tatopani:${t.nylamContainer}:${date}`;
+          if (!map.has(key)) map.set(key, { containerNo: t.nylamContainer, entries: [], dispatchedFrom: 'Nylam', dispatchedDate: date, arrivalDate: t.arrivalDate, arrivalLocation: 'Tatopani', type: 'tatopani' });
+          const existing = map.get(key)!;
+          if (!existing.entries.some(ex => ex.id === e.id)) existing.entries.push(e);
         }
       });
     });
