@@ -7,8 +7,10 @@ export type ConsignmentStatus =
   | 'At Nylam'
   | 'On the way to Tatopani'
   | 'At Tatopani port'
+  | 'Tatopani Delivered'
   | 'On the way to Kerung'
-  | 'At Kerung port';
+  | 'At Kerung port'
+  | 'Kerung Delivered';
 
 export const DESTINATIONS: Destination[] = ['TATOPANI', 'KERUNG', 'TATOPANI - KERUNG', 'KERUNG - TATOPANI', 'NYLAM'];
 
@@ -19,15 +21,17 @@ export const STATUSES: ConsignmentStatus[] = [
   'At Nylam',
   'On the way to Tatopani',
   'At Tatopani port',
+  'Tatopani Delivered',
   'On the way to Kerung',
   'At Kerung port',
+  'Kerung Delivered',
 ];
 
 export interface KerungDetails {
   dispatchedFromNylam: string;
   loadedCTN: number | null;
   nylamContainer: string;
-  status: 'On the way to Kerung' | 'At Kerung port' | '';
+  status: 'On the way to Kerung' | 'At Kerung port' | 'Kerung Delivered' | '';
   receivedCTN: number | null;
   arrivalDate: string;
 }
@@ -36,7 +40,7 @@ export interface TatopaniDetails {
   dispatchedFromNylam: string;
   loadedCTN: number | null;
   nylamContainer: string;
-  status: 'On the way to Tatopani' | 'At Tatopani port' | '';
+  status: 'On the way to Tatopani' | 'At Tatopani port' | 'Tatopani Delivered' | '';
   receivedCTN: number | null;
   arrivalDate: string;
 }
