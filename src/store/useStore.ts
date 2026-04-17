@@ -297,6 +297,7 @@ export const useStore = create<AppStore>()((set, get) => ({
     if (updates.kerung !== undefined) dbUpdates.kerung = updates.kerung;
     if (updates.tatopani !== undefined) dbUpdates.tatopani = updates.tatopani;
     if (updates.followUp !== undefined) dbUpdates.follow_up = updates.followUp;
+    if ((updates as any).remainingCTNLhasa !== undefined) dbUpdates.remaining_ctn_lhasa = (updates as any).remainingCTNLhasa;
     await db.from('loading_list_entries').update(dbUpdates).eq('id', id);
     const key = origin === 'guangzhou' ? 'loadingListGuangzhou' : 'loadingListYiwu';
     set((s) => ({
