@@ -404,7 +404,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   </tr>
                   {(isKerungExpanded || isTatopaniExpanded) && (
                     <tr className="border-b">
-                      <td colSpan={selectMode ? 28 : 27} className="p-0">
+                      <td colSpan={selectMode ? 29 : 28} className="p-0">
                         <div className="flex justify-center py-3 px-4">
                           <div className={`flex gap-4 w-full justify-center ${isKerungExpanded && isTatopaniExpanded ? 'flex-row' : ''}`}>
                             {isKerungExpanded && (
@@ -483,7 +483,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={28} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={29} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>
