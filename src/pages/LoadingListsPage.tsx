@@ -359,10 +359,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFrom}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.lhasaContainer}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFromLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
                         {isKerungExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} KERUNG
@@ -375,6 +375,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{onTheWay ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{missing ?? '-'}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.remainingCTNLhasa ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{remaining ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.client}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.remarks}</td>
