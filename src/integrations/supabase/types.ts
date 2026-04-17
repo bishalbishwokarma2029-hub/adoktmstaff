@@ -125,6 +125,7 @@ export type Database = {
           missing_ctn: number | null
           on_the_way: number | null
           origin: string
+          remaining_ctn_lhasa: number | null
           remaining_ctn_nylam: number | null
           remarks: string | null
           status: string | null
@@ -156,6 +157,7 @@ export type Database = {
           missing_ctn?: number | null
           on_the_way?: number | null
           origin?: string
+          remaining_ctn_lhasa?: number | null
           remaining_ctn_nylam?: number | null
           remarks?: string | null
           status?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           missing_ctn?: number | null
           on_the_way?: number | null
           origin?: string
+          remaining_ctn_lhasa?: number | null
           remaining_ctn_nylam?: number | null
           remarks?: string | null
           status?: string | null
