@@ -317,14 +317,15 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from {cityName}</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Lhasa Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">On the Way</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Missing CTN</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Remaining CTN at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Remaining CTN at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Client</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Remarks</th>
