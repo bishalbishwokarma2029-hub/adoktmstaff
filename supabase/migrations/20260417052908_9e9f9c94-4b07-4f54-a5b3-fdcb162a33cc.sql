@@ -1,0 +1,1 @@
+ALTER TABLE public.loading_list_entries ADD COLUMN IF NOT EXISTS remaining_ctn_lhasa NUMERIC;

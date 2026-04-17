@@ -317,14 +317,15 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from {cityName}</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Lhasa Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">On the Way</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Missing CTN</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Remaining CTN at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">Remaining CTN at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Client</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Remarks</th>
@@ -358,10 +359,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFrom}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.lhasaContainer}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFromLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
                         {isKerungExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} KERUNG
@@ -374,6 +375,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{onTheWay ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{missing ?? '-'}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.remainingCTNLhasa ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{remaining ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.client}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.remarks}</td>
@@ -395,7 +404,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   </tr>
                   {(isKerungExpanded || isTatopaniExpanded) && (
                     <tr className="border-b">
-                      <td colSpan={selectMode ? 28 : 27} className="p-0">
+                      <td colSpan={selectMode ? 29 : 28} className="p-0">
                         <div className="flex justify-center py-3 px-4">
                           <div className={`flex gap-4 w-full justify-center ${isKerungExpanded && isTatopaniExpanded ? 'flex-row' : ''}`}>
                             {isKerungExpanded && (
@@ -474,7 +483,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={28} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={29} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>

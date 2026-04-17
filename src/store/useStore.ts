@@ -37,7 +37,7 @@ interface AppStore {
   deleteConsignment: (id: string) => Promise<void>;
   setConsignments: (c: Consignment[]) => void;
 
-  addLoadingListEntry: (entry: Omit<LoadingListEntry, 'id' | 'onTheWay' | 'missingCTN' | 'remainingCTNNylam'>, origin: 'guangzhou' | 'yiwu') => Promise<void>;
+  addLoadingListEntry: (entry: Omit<LoadingListEntry, 'id' | 'onTheWay' | 'missingCTN' | 'remainingCTNNylam' | 'remainingCTNLhasa'>, origin: 'guangzhou' | 'yiwu') => Promise<void>;
   updateLoadingListEntry: (id: string, origin: 'guangzhou' | 'yiwu', entry: Partial<LoadingListEntry>) => Promise<void>;
   deleteLoadingListEntry: (id: string, origin: 'guangzhou' | 'yiwu') => Promise<void>;
   setLoadingList: (origin: 'guangzhou' | 'yiwu', entries: LoadingListEntry[]) => void;
@@ -97,6 +97,7 @@ function mapLoadingFromDb(row: any): LoadingListEntry {
     onTheWay: row.on_the_way != null ? Number(row.on_the_way) : null,
     missingCTN: row.missing_ctn != null ? Number(row.missing_ctn) : null,
     remainingCTNNylam: row.remaining_ctn_nylam != null ? Number(row.remaining_ctn_nylam) : null,
+    remainingCTNLhasa: row.remaining_ctn_lhasa != null ? Number(row.remaining_ctn_lhasa) : null,
     followUp: row.follow_up || false,
     origin: row.origin || 'guangzhou',
     createdBy: row.created_by || '',
@@ -296,6 +297,7 @@ export const useStore = create<AppStore>()((set, get) => ({
     if (updates.kerung !== undefined) dbUpdates.kerung = updates.kerung;
     if (updates.tatopani !== undefined) dbUpdates.tatopani = updates.tatopani;
     if (updates.followUp !== undefined) dbUpdates.follow_up = updates.followUp;
+    if ((updates as any).remainingCTNLhasa !== undefined) dbUpdates.remaining_ctn_lhasa = (updates as any).remainingCTNLhasa;
     await db.from('loading_list_entries').update(dbUpdates).eq('id', id);
     const key = origin === 'guangzhou' ? 'loadingListGuangzhou' : 'loadingListYiwu';
     set((s) => ({

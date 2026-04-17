@@ -87,6 +87,12 @@ export default function TrackingPage() {
                         <div><span className="text-muted-foreground text-xs">CBM</span><div className="font-semibold">{e.cbm}</div></div>
                         <div><span className="text-muted-foreground text-xs">GW</span><div className="font-semibold">{e.gw}</div></div>
                       </div>
+                      {e.remarks && (
+                        <div className="mt-3 bg-warning/10 rounded p-2 border border-warning/30">
+                          <span className="text-muted-foreground text-xs">📝 Remarks</span>
+                          <div className="font-semibold text-sm">{e.remarks}</div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Shipment Trail */}
