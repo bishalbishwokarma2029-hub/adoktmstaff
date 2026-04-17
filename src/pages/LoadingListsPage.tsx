@@ -305,10 +305,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
         <table className="w-full text-[13px]">
           <thead className="sticky top-0 z-20">
             <tr>
-              {selectMode && <th className="p-1.5 text-left sticky left-0 z-30 w-[30px]"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelected(new Set(filtered.map(c => c.id))); else setSelected(new Set()); }} /></th>}
-              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-0 z-30 min-w-[120px]">Consignment No.</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[120px] z-30">MARKA</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[200px] z-30">Total CTNS</th>
+              {selectMode && <th className="p-1.5 text-left sticky left-0 z-30 w-[30px] bg-[hsl(48_100%_72%)]"><input type="checkbox" onChange={(e) => { if (e.target.checked) setSelected(new Set(filtered.map(c => c.id))); else setSelected(new Set()); }} /></th>}
+              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-0 z-30 w-[130px] min-w-[130px] bg-[hsl(48_100%_72%)]">Consignment No.</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[130px] z-30 w-[140px] min-w-[140px] bg-[hsl(48_100%_72%)]">MARKA</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap sticky left-[270px] z-30 w-[90px] min-w-[90px] bg-[hsl(48_100%_72%)]">Total CTNS</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px]">Date</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">CBM</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">GW</th>
@@ -348,9 +348,9 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 <React.Fragment key={e.id}>
                   <tr className={`border-b hover:bg-accent/50 ${getDestinationClass(e.destination) ? 'text-destructive' : ''}`}>
                     {selectMode && <td className="p-1.5 sticky left-0 bg-card z-10"><input type="checkbox" checked={selected.has(e.id)} onChange={() => { const n = new Set(selected); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setSelected(n); }} /></td>}
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10">{e.consignmentNo}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[120px] bg-card z-10">{e.marka}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[200px] bg-card z-10">{e.totalCTN}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10 w-[130px] min-w-[130px]">{e.consignmentNo}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[130px] bg-card z-10 w-[140px] min-w-[140px]">{e.marka}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[270px] bg-card z-10 w-[90px] min-w-[90px]">{e.totalCTN}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.date}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.cbm}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.gw}</td>
