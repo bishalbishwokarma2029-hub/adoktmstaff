@@ -348,9 +348,9 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 <React.Fragment key={e.id}>
                   <tr className={`border-b hover:bg-accent/50 ${getDestinationClass(e.destination) ? 'text-destructive' : ''}`}>
                     {selectMode && <td className="p-1.5 sticky left-0 bg-card z-10"><input type="checkbox" checked={selected.has(e.id)} onChange={() => { const n = new Set(selected); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setSelected(n); }} /></td>}
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10">{e.consignmentNo}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[120px] bg-card z-10">{e.marka}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[200px] bg-card z-10">{e.totalCTN}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10 w-[130px] min-w-[130px]">{e.consignmentNo}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[130px] bg-card z-10 w-[140px] min-w-[140px]">{e.marka}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold sticky left-[270px] bg-card z-10 w-[90px] min-w-[90px]">{e.totalCTN}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.date}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.cbm}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.gw}</td>
