@@ -37,7 +37,7 @@ interface AppStore {
   deleteConsignment: (id: string) => Promise<void>;
   setConsignments: (c: Consignment[]) => void;
 
-  addLoadingListEntry: (entry: Omit<LoadingListEntry, 'id' | 'onTheWay' | 'missingCTN' | 'remainingCTNNylam'>, origin: 'guangzhou' | 'yiwu') => Promise<void>;
+  addLoadingListEntry: (entry: Omit<LoadingListEntry, 'id' | 'onTheWay' | 'missingCTN' | 'remainingCTNNylam' | 'remainingCTNLhasa'>, origin: 'guangzhou' | 'yiwu') => Promise<void>;
   updateLoadingListEntry: (id: string, origin: 'guangzhou' | 'yiwu', entry: Partial<LoadingListEntry>) => Promise<void>;
   deleteLoadingListEntry: (id: string, origin: 'guangzhou' | 'yiwu') => Promise<void>;
   setLoadingList: (origin: 'guangzhou' | 'yiwu', entries: LoadingListEntry[]) => void;
