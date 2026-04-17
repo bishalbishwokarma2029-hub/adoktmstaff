@@ -75,6 +75,7 @@ export interface LoadingListEntry extends Consignment {
   onTheWay: number | null;
   missingCTN: number | null;
   remainingCTNNylam: number | null;
+  remainingCTNLhasa: number | null;
   followUp: boolean;
   origin: 'guangzhou' | 'yiwu';
   createdBy: string;

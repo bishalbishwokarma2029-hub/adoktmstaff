@@ -97,6 +97,7 @@ function mapLoadingFromDb(row: any): LoadingListEntry {
     onTheWay: row.on_the_way != null ? Number(row.on_the_way) : null,
     missingCTN: row.missing_ctn != null ? Number(row.missing_ctn) : null,
     remainingCTNNylam: row.remaining_ctn_nylam != null ? Number(row.remaining_ctn_nylam) : null,
+    remainingCTNLhasa: row.remaining_ctn_lhasa != null ? Number(row.remaining_ctn_lhasa) : null,
     followUp: row.follow_up || false,
     origin: row.origin || 'guangzhou',
     createdBy: row.created_by || '',
