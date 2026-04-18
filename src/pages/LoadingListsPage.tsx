@@ -331,8 +331,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Lhasa Container</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ LHASA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
