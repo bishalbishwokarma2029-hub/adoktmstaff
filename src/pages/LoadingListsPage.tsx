@@ -569,8 +569,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
             <div><label className="text-xs font-medium">Client</label><Input value={form.client || ''} onChange={(e) => setForm({ ...form, client: e.target.value })} /></div>
             <div><label className="text-xs font-medium">Arrival at Nylam</label><Input type="date" value={form.arrivalDateNylam || ''} onChange={(e) => setForm({ ...form, arrivalDateNylam: e.target.value })} /></div>
             <div><label className="text-xs font-medium">Arrival at Lhasa</label><Input type="date" value={form.arrivalAtLhasa || ''} onChange={(e) => setForm({ ...form, arrivalAtLhasa: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Lhasa Container</label><Input value={form.lhasaContainer || ''} onChange={(e) => setForm({ ...form, lhasaContainer: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched from Lhasa</label><Input value={form.dispatchedFromLhasa || ''} onChange={(e) => setForm({ ...form, dispatchedFromLhasa: e.target.value })} /></div>
+            <div className="col-span-2 text-xs text-muted-foreground italic">💡 Add Lhasa-Nylam Containers and Dispatched-from-Lhasa dates from the ▸ LHASA expandable column in the table after saving.</div>
             <div className="col-span-2"><label className="text-xs font-medium">Remarks</label><Input value={form.remarks || ''} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
           </div>
           <Button className="mt-3 w-full" onClick={handleSave}>{editId ? 'Update' : 'Add'}</Button>
@@ -610,18 +609,30 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   {viewItem.arrivalAtLhasa && (
                     <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Lhasa</span><span className="font-bold">{viewItem.arrivalAtLhasa}</span></div>
                   )}
-                  {viewItem.lhasaContainer && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 Lhasa Container</span><span className="font-bold">{viewItem.lhasaContainer}</span></div>
-                  )}
-                  {viewItem.dispatchedFromLhasa && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from Lhasa</span><span className="font-bold">{viewItem.dispatchedFromLhasa}</span></div>
-                  )}
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🔄 On the Way</span><span className="text-xl font-bold">{calcOnTheWay(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2 bg-destructive/10"><span className="text-xs font-bold uppercase text-muted-foreground block">⚠️ Missing CTN</span><span className="text-xl font-bold">{calcMissing(viewItem) ?? '-'}</span></div>
-                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Nylam</span><span className="text-xl font-bold">{calcRemaining(viewItem) ?? '-'}</span></div>
+                  {viewItem.remainingCTNLhasa != null && (
+                    <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Lhasa</span><span className="text-xl font-bold">{viewItem.remainingCTNLhasa}</span></div>
+                  )}
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Nylam</span><span className="text-xl font-bold">{calcRemainingAtNylam(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">✅ Follow Up</span><span className="font-bold">{viewItem.followUp ? '✅ Done' : '⬜ Pending'}</span></div>
                   <div className="border rounded p-2 col-span-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📝 Remarks</span><span className="font-bold">{viewItem.remarks || '-'}</span></div>
                 </div>
+
+                {/* LHASA list - only if filled */}
+                {(viewItem.lhasa?.length ?? 0) > 0 && (
+                  <div className="border rounded-lg p-3">
+                    <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA ({viewItem.lhasa.length} containers)</h4>
+                    <div className="space-y-1.5">
+                      {viewItem.lhasa.map((l, i) => (
+                        <div key={i} className="border rounded p-2 bg-accent/20 grid grid-cols-2 gap-1.5 text-xs">
+                          <div><span className="font-bold">Lhasa-Nylam Container:</span> <span className="font-bold">{l.nylamContainer || '-'}</span></div>
+                          <div><span className="font-bold">Dispatched from Lhasa:</span> <span className="font-bold">{l.dispatchedFromLhasa || '-'}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* TATOPANI & KERUNG side by side */}
                 <div className="grid grid-cols-2 gap-3">
