@@ -75,6 +75,7 @@ export interface LoadingListEntry extends Consignment {
   arrivalAtLhasa: string;
   lhasaContainer: string;
   dispatchedFromLhasa: string;
+  lhasa: LhasaDetails[];
   kerung: KerungDetails[];
   tatopani: TatopaniDetails[];
   onTheWay: number | null;
