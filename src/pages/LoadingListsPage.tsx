@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Trash2, Pencil, ChevronDown, ChevronRight, Check } from 'lucide-react';
 import TableToolbar from '@/components/TableToolbar';
 import { DESTINATIONS, STATUSES, getStatusClass, getDestinationClass } from '@/types';
-import type { LoadingListEntry, Destination, ConsignmentStatus, KerungDetails, TatopaniDetails, OldNylamEntry } from '@/types';
+import type { LoadingListEntry, Destination, ConsignmentStatus, KerungDetails, TatopaniDetails, LhasaDetails, OldNylamEntry } from '@/types';
 import { formatLastModified } from '@/lib/formatDate';
 import DebouncedInput from '@/components/DebouncedInput';
 import * as XLSX from 'xlsx';
@@ -25,6 +25,17 @@ const COMPANY_HEADER = [
 ];
 const emptyKerung = (): KerungDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
 const emptyTatopani = (): TatopaniDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
+const emptyLhasa = (): LhasaDetails => ({ nylamContainer: '', dispatchedFromLhasa: '' });
+
+function calcRemainingAtNylam(e: LoadingListEntry): number | null {
+  const lhasa = e.remainingCTNLhasa ?? 0;
+  let totalLoaded = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.loadedCTN) { totalLoaded += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.loadedCTN) { totalLoaded += k.loadedCTN; hasAny = true; } });
+  if (!hasAny && e.remainingCTNLhasa == null) return null;
+  return e.totalCTN - lhasa - totalLoaded;
+}
 
 function calcOnTheWay(e: LoadingListEntry): number | null {
   let total = 0;
@@ -80,6 +91,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
   const [masterDispatched, setMasterDispatched] = useState('');
   const [masterContainer, setMasterContainer] = useState('');
   const [masterStatus, setMasterStatus] = useState<ConsignmentStatus | ''>('');
+  const [expandedLhasa, setExpandedLhasa] = useState<Set<string>>(new Set());
   const [masterArrivalLhasa, setMasterArrivalLhasa] = useState('');
   const [masterLhasaContainer, setMasterLhasaContainer] = useState('');
   const [masterDispatchedLhasa, setMasterDispatchedLhasa] = useState('');
@@ -89,7 +101,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
     date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0,
     destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '',
     container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '',
-    followUp: false, kerung: [emptyKerung()], tatopani: [emptyTatopani()],
+    followUp: false, lhasa: [], kerung: [emptyKerung()], tatopani: [emptyTatopani()],
   });
 
   const filtered = useMemo(() =>
@@ -155,6 +167,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
         arrivalAtLhasa: row['Arrival at Lhasa'] || '',
         lhasaContainer: row['Lhasa Container'] || '',
         dispatchedFromLhasa: row['Dispatched from Lhasa'] || '',
+        lhasa: [],
         kerung: [emptyKerung()],
         tatopani: [emptyTatopani()],
         followUp: false,
@@ -233,7 +246,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
       <TableToolbar
         searchValue={search}
         onSearchChange={setSearch}
-        onAdd={() => { setForm({ date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0, destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '', container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '', followUp: false, kerung: [emptyKerung()], tatopani: [emptyTatopani()] }); setEditId(null); setAddOpen(true); }}
+        onAdd={() => { setForm({ date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0, destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '', container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '', followUp: false, lhasa: [], kerung: [emptyKerung()], tatopani: [emptyTatopani()] }); setEditId(null); setAddOpen(true); }}
         onExport={handleExport}
         onImport={handleImport}
         onSelectToggle={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
@@ -318,8 +331,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Lhasa Container</th>
-              <th className="p-1.5 text-left font-bold whitespace-nowrap">Dispatched from Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ LHASA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
@@ -340,9 +352,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
             {filtered.map((e) => {
               const onTheWay = calcOnTheWay(e);
               const missing = calcMissing(e);
-              const remaining = calcRemaining(e);
+              const remaining = calcRemainingAtNylam(e);
               const isKerungExpanded = expandedKerung.has(e.id);
               const isTatopaniExpanded = expandedTatopani.has(e.id);
+              const isLhasaExpanded = expandedLhasa.has(e.id);
 
               return (
                 <React.Fragment key={e.id}>
@@ -360,8 +373,11 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.lhasaContainer}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFromLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap">
+                      <button onClick={() => { const n = new Set(expandedLhasa); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedLhasa(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
+                        {isLhasaExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} LHASA{(e.lhasa?.length ?? 0) > 0 ? ` (${e.lhasa.length})` : ''}
+                      </button>
+                    </td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
@@ -383,7 +399,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                         onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
                       />
                     </td>
-                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{remaining ?? '-'}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold" title="Auto: Total - Remaining at Lhasa - Loaded Tatopani - Loaded Kerung">{remaining ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.client}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.remarks}</td>
                     <td className="p-1.5 whitespace-nowrap text-center">
@@ -402,10 +418,56 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                       </div>
                     </td>
                   </tr>
-                  {(isKerungExpanded || isTatopaniExpanded) && (
+                  {(isKerungExpanded || isTatopaniExpanded || isLhasaExpanded) && (
                     <tr className="border-b">
-                      <td colSpan={selectMode ? 29 : 28} className="p-0">
-                        <div className="flex justify-center py-3 px-4">
+                      <td colSpan={selectMode ? 28 : 27} className="p-0">
+                        <div className="flex flex-col gap-3 py-3 px-4">
+                          {isLhasaExpanded && (
+                            <div className="border rounded-lg p-3 w-full max-w-3xl mx-auto bg-purple-50/40">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-purple-700 text-sm">▸ LHASA ({e.lhasa?.length ?? 0} containers)</span>
+                                <div className="flex items-center gap-1 text-xs">
+                                  <span>Total Containers:</span>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    className="h-6 w-14 text-xs text-center"
+                                    value={e.lhasa?.length ?? 0}
+                                    onChange={(ev) => {
+                                      const n = Math.max(0, Number(ev.target.value) || 0);
+                                      const current = e.lhasa || [];
+                                      let next: LhasaDetails[];
+                                      if (n > current.length) next = [...current, ...Array.from({ length: n - current.length }, () => emptyLhasa())];
+                                      else next = current.slice(0, n);
+                                      store.updateLoadingListEntry(e.id, origin, { lhasa: next } as any);
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              {(e.lhasa?.length ?? 0) === 0 && (
+                                <p className="text-xs text-muted-foreground italic mb-2">Enter the number of containers above to add Lhasa-Nylam container details.</p>
+                              )}
+                              {(e.lhasa || []).map((l, li) => (
+                                <div key={li} className="border rounded p-2 mb-2 bg-accent/10">
+                                  <p className="font-bold text-xs mb-1">Container {li + 1}</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-xs text-muted-foreground">Lhasa-Nylam Container</label>
+                                      <DebouncedInput className="h-7 text-xs" value={l.nylamContainer} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], nylamContainer: v }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs text-muted-foreground">Dispatched from Lhasa</label>
+                                      <DebouncedInput type="date" delay={100} className="h-7 text-xs" value={l.dispatchedFromLhasa} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], dispatchedFromLhasa: v }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" className="text-xs h-6" onClick={() => { const nl = [...(e.lhasa || []), emptyLhasa()]; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }}>+ Add</Button>
+                                {(e.lhasa?.length ?? 0) > 0 && <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => { const nl = (e.lhasa || []).slice(0, -1); store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }}>- Remove</Button>}
+                              </div>
+                            </div>
+                          )}
                           <div className={`flex gap-4 w-full justify-center ${isKerungExpanded && isTatopaniExpanded ? 'flex-row' : ''}`}>
                             {isKerungExpanded && (
                               <div className={`border rounded-lg p-3 ${isKerungExpanded && isTatopaniExpanded ? 'flex-1 max-w-xl' : 'w-full max-w-2xl'}`}>
@@ -483,7 +545,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={29} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={selectMode ? 28 : 27} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -507,8 +569,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
             <div><label className="text-xs font-medium">Client</label><Input value={form.client || ''} onChange={(e) => setForm({ ...form, client: e.target.value })} /></div>
             <div><label className="text-xs font-medium">Arrival at Nylam</label><Input type="date" value={form.arrivalDateNylam || ''} onChange={(e) => setForm({ ...form, arrivalDateNylam: e.target.value })} /></div>
             <div><label className="text-xs font-medium">Arrival at Lhasa</label><Input type="date" value={form.arrivalAtLhasa || ''} onChange={(e) => setForm({ ...form, arrivalAtLhasa: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Lhasa Container</label><Input value={form.lhasaContainer || ''} onChange={(e) => setForm({ ...form, lhasaContainer: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched from Lhasa</label><Input value={form.dispatchedFromLhasa || ''} onChange={(e) => setForm({ ...form, dispatchedFromLhasa: e.target.value })} /></div>
+            <div className="col-span-2 text-xs text-muted-foreground italic">💡 Add Lhasa-Nylam Containers and Dispatched-from-Lhasa dates from the ▸ LHASA expandable column in the table after saving.</div>
             <div className="col-span-2"><label className="text-xs font-medium">Remarks</label><Input value={form.remarks || ''} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
           </div>
           <Button className="mt-3 w-full" onClick={handleSave}>{editId ? 'Update' : 'Add'}</Button>
@@ -548,18 +609,30 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   {viewItem.arrivalAtLhasa && (
                     <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Lhasa</span><span className="font-bold">{viewItem.arrivalAtLhasa}</span></div>
                   )}
-                  {viewItem.lhasaContainer && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 Lhasa Container</span><span className="font-bold">{viewItem.lhasaContainer}</span></div>
-                  )}
-                  {viewItem.dispatchedFromLhasa && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from Lhasa</span><span className="font-bold">{viewItem.dispatchedFromLhasa}</span></div>
-                  )}
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🔄 On the Way</span><span className="text-xl font-bold">{calcOnTheWay(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2 bg-destructive/10"><span className="text-xs font-bold uppercase text-muted-foreground block">⚠️ Missing CTN</span><span className="text-xl font-bold">{calcMissing(viewItem) ?? '-'}</span></div>
-                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Nylam</span><span className="text-xl font-bold">{calcRemaining(viewItem) ?? '-'}</span></div>
+                  {viewItem.remainingCTNLhasa != null && (
+                    <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Lhasa</span><span className="text-xl font-bold">{viewItem.remainingCTNLhasa}</span></div>
+                  )}
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Nylam</span><span className="text-xl font-bold">{calcRemainingAtNylam(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">✅ Follow Up</span><span className="font-bold">{viewItem.followUp ? '✅ Done' : '⬜ Pending'}</span></div>
                   <div className="border rounded p-2 col-span-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📝 Remarks</span><span className="font-bold">{viewItem.remarks || '-'}</span></div>
                 </div>
+
+                {/* LHASA list - only if filled */}
+                {(viewItem.lhasa?.length ?? 0) > 0 && (
+                  <div className="border rounded-lg p-3">
+                    <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA ({viewItem.lhasa.length} containers)</h4>
+                    <div className="space-y-1.5">
+                      {viewItem.lhasa.map((l, i) => (
+                        <div key={i} className="border rounded p-2 bg-accent/20 grid grid-cols-2 gap-1.5 text-xs">
+                          <div><span className="font-bold">Lhasa-Nylam Container:</span> <span className="font-bold">{l.nylamContainer || '-'}</span></div>
+                          <div><span className="font-bold">Dispatched from Lhasa:</span> <span className="font-bold">{l.dispatchedFromLhasa || '-'}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* TATOPANI & KERUNG side by side */}
                 <div className="grid grid-cols-2 gap-3">

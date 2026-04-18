@@ -45,6 +45,11 @@ export interface TatopaniDetails {
   arrivalDate: string;
 }
 
+export interface LhasaDetails {
+  nylamContainer: string;
+  dispatchedFromLhasa: string;
+}
+
 export interface Consignment {
   id: string;
   date: string;
@@ -70,6 +75,7 @@ export interface LoadingListEntry extends Consignment {
   arrivalAtLhasa: string;
   lhasaContainer: string;
   dispatchedFromLhasa: string;
+  lhasa: LhasaDetails[];
   kerung: KerungDetails[];
   tatopani: TatopaniDetails[];
   onTheWay: number | null;

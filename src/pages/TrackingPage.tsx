@@ -69,7 +69,9 @@ export default function TrackingPage() {
                 let remainingAtNylam = e.totalCTN - totalLoaded;
                 let hasRemaining = totalLoaded > 0 && remainingAtNylam > 0;
 
-                const hasLhasaInfo = !!(e.arrivalAtLhasa || e.lhasaContainer || e.dispatchedFromLhasa);
+                const lhasaEntries = e.lhasa || [];
+                const hasLhasaInfo = lhasaEntries.length > 0 || !!(e.arrivalAtLhasa);
+                const hasRemainingLhasa = e.remainingCTNLhasa != null;
 
                 return (
                   <div key={e.id} className="border rounded-lg bg-card overflow-hidden">
@@ -119,18 +121,29 @@ export default function TrackingPage() {
 
                           <span className="mt-8 text-muted-foreground text-lg font-bold flex-shrink-0">→</span>
 
-                          {/* Lhasa - only show if filled */}
-                          {hasLhasaInfo && (
+                          {/* Lhasa - one card per Lhasa-Nylam container, only if filled */}
+                          {hasLhasaInfo && lhasaEntries.length === 0 && (
                             <>
                               <div className="min-w-[180px] border rounded-lg p-3 bg-purple-50 text-center flex-shrink-0">
                                 <div className="text-xs font-bold text-purple-700 mb-1">Lhasa</div>
                                 <div className={`text-base font-bold px-3 py-1 rounded-md inline-block ${e.arrivalAtLhasa ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'}`}>{e.arrivalAtLhasa ? '✓ Arrived' : '⏳ In Transit'}</div>
                                 {e.arrivalAtLhasa && <div className="text-xs text-muted-foreground mt-1">📅 {e.arrivalAtLhasa}</div>}
-                                {e.lhasaContainer && <div className="text-xs text-muted-foreground">Container: {e.lhasaContainer}</div>}
                               </div>
                               <span className="mt-8 text-muted-foreground text-lg font-bold flex-shrink-0">→</span>
                             </>
                           )}
+                          {lhasaEntries.map((l, i) => (
+                            <React.Fragment key={`l-${i}`}>
+                              <div className="min-w-[200px] border rounded-lg p-3 bg-purple-50 text-center flex-shrink-0">
+                                <div className="text-xs font-bold text-purple-700 mb-1">Lhasa Container {i + 1}</div>
+                                <div className={`text-base font-bold px-3 py-1 rounded-md inline-block ${e.arrivalAtLhasa ? 'bg-purple-100 text-purple-800' : 'bg-yellow-100 text-yellow-800'}`}>{e.arrivalAtLhasa ? '✓ Arrived' : '⏳ In Transit'}</div>
+                                {e.arrivalAtLhasa && <div className="text-xs text-muted-foreground mt-1">📅 Arrived: {e.arrivalAtLhasa}</div>}
+                                {l.nylamContainer && <div className="text-xs text-muted-foreground">Container: {l.nylamContainer}</div>}
+                                {l.dispatchedFromLhasa && <div className="text-xs text-muted-foreground">Dispatched: {l.dispatchedFromLhasa}</div>}
+                              </div>
+                              <span className="mt-8 text-muted-foreground text-lg font-bold flex-shrink-0">→</span>
+                            </React.Fragment>
+                          ))}
 
                           {/* Nylam */}
                           <div className={`min-w-[180px] border rounded-lg p-3 text-center flex-shrink-0 ${hasArrivedNylam ? 'bg-primary/5' : 'bg-yellow-50'}`}>
@@ -171,15 +184,24 @@ export default function TrackingPage() {
                     </div>
 
                     {/* Lhasa details - only if filled */}
-                    {hasLhasaInfo && (
+                    {(hasLhasaInfo || hasRemainingLhasa) && (
                       <div className="p-4 border-b">
                         <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA Details</h4>
                         <div className="border rounded p-3 text-sm">
                           <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                             {e.arrivalAtLhasa && <><div className="text-muted-foreground">Arrival at Lhasa:</div><div className="text-right font-semibold">{e.arrivalAtLhasa}</div></>}
-                            {e.lhasaContainer && <><div className="text-muted-foreground">Lhasa Container:</div><div className="text-right font-semibold">{e.lhasaContainer}</div></>}
-                            {e.dispatchedFromLhasa && <><div className="text-muted-foreground">Dispatched from Lhasa:</div><div className="text-right font-semibold">{e.dispatchedFromLhasa}</div></>}
+                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{e.remainingCTNLhasa}</div></>}
                           </div>
+                          {lhasaEntries.length > 0 && (
+                            <div className="mt-3 space-y-1.5">
+                              {lhasaEntries.map((l, i) => (
+                                <div key={i} className="border rounded p-2 bg-purple-50/40 grid grid-cols-2 gap-x-4 text-xs">
+                                  <div><span className="font-bold">Container {i + 1}:</span> {l.nylamContainer || '-'}</div>
+                                  <div><span className="font-bold">Dispatched:</span> {l.dispatchedFromLhasa || '-'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
