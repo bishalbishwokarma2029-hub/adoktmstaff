@@ -423,7 +423,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                       <td colSpan={selectMode ? 28 : 27} className="p-0">
                         <div className="flex flex-col gap-3 py-3 px-4">
                           {isLhasaExpanded && (
-                            <div className="border rounded-lg p-3 w-full max-w-3xl mx-auto bg-purple-50/40">
+                            <div className="border rounded-lg p-3 w-full max-w-md mx-auto bg-purple-50/40">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="font-bold text-purple-700 text-sm">▸ LHASA ({e.lhasa?.length ?? 0} containers)</span>
                                 <div className="flex items-center gap-1 text-xs">
@@ -437,7 +437,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                       const n = Math.max(0, Number(ev.target.value) || 0);
                                       const current = e.lhasa || [];
                                       let next: LhasaDetails[];
-                                      if (n > current.length) next = [...current, ...Array.from({ length: n - current.length }, () => emptyLhasa())];
+                                      if (n > current.length) next = [...current, ...Array.from({ length: n - current.length }, () => emptyLhasa(e.totalCTN || null))];
                                       else next = current.slice(0, n);
                                       store.updateLoadingListEntry(e.id, origin, { lhasa: next } as any);
                                     }}
@@ -450,7 +450,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                               {(e.lhasa || []).map((l, li) => (
                                 <div key={li} className="border rounded p-2 mb-2 bg-accent/10">
                                   <p className="font-bold text-xs mb-1">Container {li + 1}</p>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-1 gap-2">
                                     <div>
                                       <label className="text-xs text-muted-foreground">Lhasa-Nylam Container</label>
                                       <DebouncedInput className="h-7 text-xs" value={l.nylamContainer} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], nylamContainer: v }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
@@ -459,11 +459,15 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                       <label className="text-xs text-muted-foreground">Dispatched from Lhasa</label>
                                       <DebouncedInput type="date" delay={100} className="h-7 text-xs" value={l.dispatchedFromLhasa} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], dispatchedFromLhasa: v }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
                                     </div>
+                                    <div>
+                                      <label className="text-xs text-muted-foreground">Loaded CTN</label>
+                                      <DebouncedInput type="number" className="h-7 text-xs" value={l.loadedCTN ?? (e.totalCTN || '')} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], loadedCTN: v === '' ? null : Number(v) }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
+                                    </div>
                                   </div>
                                 </div>
                               ))}
                               <div className="flex gap-2">
-                                <Button variant="ghost" size="sm" className="text-xs h-6" onClick={() => { const nl = [...(e.lhasa || []), emptyLhasa()]; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }}>+ Add</Button>
+                                <Button variant="ghost" size="sm" className="text-xs h-6" onClick={() => { const nl = [...(e.lhasa || []), emptyLhasa(e.totalCTN || null)]; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }}>+ Add</Button>
                                 {(e.lhasa?.length ?? 0) > 0 && <Button variant="ghost" size="sm" className="text-xs h-6 text-destructive" onClick={() => { const nl = (e.lhasa || []).slice(0, -1); store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }}>- Remove</Button>}
                               </div>
                             </div>
