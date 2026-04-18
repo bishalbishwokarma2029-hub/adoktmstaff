@@ -48,6 +48,7 @@ export interface TatopaniDetails {
 export interface LhasaDetails {
   nylamContainer: string;
   dispatchedFromLhasa: string;
+  loadedCTN: number | null;
 }
 
 export interface Consignment {
