@@ -140,6 +140,7 @@ export default function ContainersPage() {
       arrivalAtLhasa: '',
       lhasaContainer: '',
       dispatchedFromLhasa: '',
+      lhasa: [],
       kerung: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
       tatopani: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
       followUp: false,

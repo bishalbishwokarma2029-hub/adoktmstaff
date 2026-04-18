@@ -82,6 +82,7 @@ export default function LotwisePage() {
       arrivalAtLhasa: '',
       lhasaContainer: '',
       dispatchedFromLhasa: '',
+      lhasa: [],
       kerung: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
       tatopani: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
       followUp: false,

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Cast to any to avoid type errors when Database types haven't been generated yet
 const db = supabase as any;
-import type { Consignment, LoadingListEntry, OldNylamEntry, RemainingCTNEntry, KerungDetails, TatopaniDetails } from '@/types';
+import type { Consignment, LoadingListEntry, OldNylamEntry, RemainingCTNEntry, KerungDetails, TatopaniDetails, LhasaDetails } from '@/types';
 
 let cachedEmail: string | null = null;
 let emailPromise: Promise<string> | null = null;
@@ -92,6 +92,14 @@ function mapLoadingFromDb(row: any): LoadingListEntry {
     arrivalAtLhasa: row.arrival_at_lhasa || '',
     lhasaContainer: row.lhasa_container || '',
     dispatchedFromLhasa: row.dispatched_from_lhasa || '',
+    lhasa: (() => {
+      const arr = (row.lhasa as LhasaDetails[]) || [];
+      // Auto-migrate: seed from legacy single-Lhasa fields when array is empty
+      if (arr.length === 0 && (row.lhasa_container || row.dispatched_from_lhasa)) {
+        return [{ nylamContainer: row.lhasa_container || '', dispatchedFromLhasa: row.dispatched_from_lhasa || '' }];
+      }
+      return arr;
+    })(),
     kerung: (row.kerung as KerungDetails[]) || [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
     tatopani: (row.tatopani as TatopaniDetails[]) || [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
     onTheWay: row.on_the_way != null ? Number(row.on_the_way) : null,
@@ -251,6 +259,7 @@ export const useStore = create<AppStore>()((set, get) => ({
       arrival_at_lhasa: entry.arrivalAtLhasa || '',
       lhasa_container: entry.lhasaContainer || '',
       dispatched_from_lhasa: entry.dispatchedFromLhasa || '',
+      lhasa: (entry.lhasa || []) as any,
       kerung: entry.kerung as any,
       tatopani: entry.tatopani as any, follow_up: entry.followUp, origin,
       created_by: email, updated_by: email,
@@ -294,6 +303,7 @@ export const useStore = create<AppStore>()((set, get) => ({
     if (updates.arrivalAtLhasa !== undefined) dbUpdates.arrival_at_lhasa = updates.arrivalAtLhasa;
     if (updates.lhasaContainer !== undefined) dbUpdates.lhasa_container = updates.lhasaContainer;
     if (updates.dispatchedFromLhasa !== undefined) dbUpdates.dispatched_from_lhasa = updates.dispatchedFromLhasa;
+    if ((updates as any).lhasa !== undefined) dbUpdates.lhasa = (updates as any).lhasa;
     if (updates.kerung !== undefined) dbUpdates.kerung = updates.kerung;
     if (updates.tatopani !== undefined) dbUpdates.tatopani = updates.tatopani;
     if (updates.followUp !== undefined) dbUpdates.follow_up = updates.followUp;
@@ -432,6 +442,7 @@ export const useStore = create<AppStore>()((set, get) => ({
         status: c.status, client: c.client, remarks: c.remarks,
         lotNo: '', dispatchedFrom: '', container: '', arrivalDateNylam: '',
         arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '',
+        lhasa: [],
         kerung: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
         tatopani: [{ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' }],
         followUp: false, origin, createdBy: '', updatedBy: '', updatedAt: '',
