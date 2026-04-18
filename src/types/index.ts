@@ -45,6 +45,11 @@ export interface TatopaniDetails {
   arrivalDate: string;
 }
 
+export interface LhasaDetails {
+  nylamContainer: string;
+  dispatchedFromLhasa: string;
+}
+
 export interface Consignment {
   id: string;
   date: string;
