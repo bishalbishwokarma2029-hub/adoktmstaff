@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Trash2, Pencil, ChevronDown, ChevronRight, Check } from 'lucide-react';
 import TableToolbar from '@/components/TableToolbar';
 import { DESTINATIONS, STATUSES, getStatusClass, getDestinationClass } from '@/types';
-import type { LoadingListEntry, Destination, ConsignmentStatus, KerungDetails, TatopaniDetails, OldNylamEntry } from '@/types';
+import type { LoadingListEntry, Destination, ConsignmentStatus, KerungDetails, TatopaniDetails, LhasaDetails, OldNylamEntry } from '@/types';
 import { formatLastModified } from '@/lib/formatDate';
 import DebouncedInput from '@/components/DebouncedInput';
 import * as XLSX from 'xlsx';
@@ -25,6 +25,17 @@ const COMPANY_HEADER = [
 ];
 const emptyKerung = (): KerungDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
 const emptyTatopani = (): TatopaniDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
+const emptyLhasa = (): LhasaDetails => ({ nylamContainer: '', dispatchedFromLhasa: '' });
+
+function calcRemainingAtNylam(e: LoadingListEntry): number | null {
+  const lhasa = e.remainingCTNLhasa ?? 0;
+  let totalLoaded = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.loadedCTN) { totalLoaded += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.loadedCTN) { totalLoaded += k.loadedCTN; hasAny = true; } });
+  if (!hasAny && e.remainingCTNLhasa == null) return null;
+  return e.totalCTN - lhasa - totalLoaded;
+}
 
 function calcOnTheWay(e: LoadingListEntry): number | null {
   let total = 0;
@@ -80,6 +91,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
   const [masterDispatched, setMasterDispatched] = useState('');
   const [masterContainer, setMasterContainer] = useState('');
   const [masterStatus, setMasterStatus] = useState<ConsignmentStatus | ''>('');
+  const [expandedLhasa, setExpandedLhasa] = useState<Set<string>>(new Set());
   const [masterArrivalLhasa, setMasterArrivalLhasa] = useState('');
   const [masterLhasaContainer, setMasterLhasaContainer] = useState('');
   const [masterDispatchedLhasa, setMasterDispatchedLhasa] = useState('');
@@ -89,7 +101,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
     date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0,
     destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '',
     container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '',
-    followUp: false, kerung: [emptyKerung()], tatopani: [emptyTatopani()],
+    followUp: false, lhasa: [], kerung: [emptyKerung()], tatopani: [emptyTatopani()],
   });
 
   const filtered = useMemo(() =>
@@ -234,7 +246,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
       <TableToolbar
         searchValue={search}
         onSearchChange={setSearch}
-        onAdd={() => { setForm({ date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0, destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '', container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '', followUp: false, kerung: [emptyKerung()], tatopani: [emptyTatopani()] }); setEditId(null); setAddOpen(true); }}
+        onAdd={() => { setForm({ date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0, destination: 'TATOPANI', status: '', client: '', remarks: '', lotNo: '', dispatchedFrom: '', container: '', arrivalDateNylam: '', arrivalAtLhasa: '', lhasaContainer: '', dispatchedFromLhasa: '', followUp: false, lhasa: [], kerung: [emptyKerung()], tatopani: [emptyTatopani()] }); setEditId(null); setAddOpen(true); }}
         onExport={handleExport}
         onImport={handleImport}
         onSelectToggle={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
