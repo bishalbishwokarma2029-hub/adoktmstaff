@@ -155,6 +155,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
         arrivalAtLhasa: row['Arrival at Lhasa'] || '',
         lhasaContainer: row['Lhasa Container'] || '',
         dispatchedFromLhasa: row['Dispatched from Lhasa'] || '',
+        lhasa: [],
         kerung: [emptyKerung()],
         tatopani: [emptyTatopani()],
         followUp: false,
