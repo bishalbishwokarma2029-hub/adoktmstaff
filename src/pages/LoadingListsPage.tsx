@@ -352,9 +352,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
             {filtered.map((e) => {
               const onTheWay = calcOnTheWay(e);
               const missing = calcMissing(e);
-              const remaining = calcRemaining(e);
+              const remaining = calcRemainingAtNylam(e);
               const isKerungExpanded = expandedKerung.has(e.id);
               const isTatopaniExpanded = expandedTatopani.has(e.id);
+              const isLhasaExpanded = expandedLhasa.has(e.id);
 
               return (
                 <React.Fragment key={e.id}>
@@ -372,8 +373,11 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.lhasaContainer}</td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.dispatchedFromLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap">
+                      <button onClick={() => { const n = new Set(expandedLhasa); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedLhasa(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
+                        {isLhasaExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} LHASA{(e.lhasa?.length ?? 0) > 0 ? ` (${e.lhasa.length})` : ''}
+                      </button>
+                    </td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
@@ -395,7 +399,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                         onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
                       />
                     </td>
-                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{remaining ?? '-'}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold" title="Auto: Total - Remaining at Lhasa - Loaded Tatopani - Loaded Kerung">{remaining ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.client}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.remarks}</td>
                     <td className="p-1.5 whitespace-nowrap text-center">
