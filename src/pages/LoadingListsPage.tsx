@@ -545,7 +545,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={29} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={selectMode ? 28 : 27} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>
