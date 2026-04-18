@@ -119,6 +119,7 @@ export type Database = {
           gw: number | null
           id: string
           kerung: Json | null
+          lhasa: Json | null
           lhasa_container: string | null
           lot_no: string | null
           marka: string | null
@@ -151,6 +152,7 @@ export type Database = {
           gw?: number | null
           id?: string
           kerung?: Json | null
+          lhasa?: Json | null
           lhasa_container?: string | null
           lot_no?: string | null
           marka?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           gw?: number | null
           id?: string
           kerung?: Json | null
+          lhasa?: Json | null
           lhasa_container?: string | null
           lot_no?: string | null
           marka?: string | null
