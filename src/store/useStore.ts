@@ -96,7 +96,7 @@ function mapLoadingFromDb(row: any): LoadingListEntry {
       const arr = (row.lhasa as LhasaDetails[]) || [];
       // Auto-migrate: seed from legacy single-Lhasa fields when array is empty
       if (arr.length === 0 && (row.lhasa_container || row.dispatched_from_lhasa)) {
-        return [{ nylamContainer: row.lhasa_container || '', dispatchedFromLhasa: row.dispatched_from_lhasa || '' }];
+        return [{ nylamContainer: row.lhasa_container || '', dispatchedFromLhasa: row.dispatched_from_lhasa || '', loadedCTN: row.total_ctn != null ? Number(row.total_ctn) : null }];
       }
       return arr;
     })(),
