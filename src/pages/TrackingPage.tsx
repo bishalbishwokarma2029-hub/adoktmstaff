@@ -140,19 +140,28 @@ export default function TrackingPage() {
                                 {e.arrivalAtLhasa && <div className="text-xs text-muted-foreground mt-1">📅 Arrived: {e.arrivalAtLhasa}</div>}
                                 {l.nylamContainer && <div className="text-xs text-muted-foreground">Container: {l.nylamContainer}</div>}
                                 {l.dispatchedFromLhasa && <div className="text-xs text-muted-foreground">Dispatched: {l.dispatchedFromLhasa}</div>}
+                                {l.loadedCTN != null && <div className="text-xs text-muted-foreground">Loaded: {l.loadedCTN} CTN</div>}
                               </div>
                               <span className="mt-8 text-muted-foreground text-lg font-bold flex-shrink-0">→</span>
                             </React.Fragment>
                           ))}
 
-                          {/* Nylam */}
-                          <div className={`min-w-[180px] border rounded-lg p-3 text-center flex-shrink-0 ${hasArrivedNylam ? 'bg-primary/5' : 'bg-yellow-50'}`}>
-                            <div className={`text-xs font-bold mb-1 ${hasArrivedNylam ? 'text-primary' : 'text-yellow-700'}`}>At Nylam</div>
-                            <div className={`text-base font-bold px-3 py-1 rounded-md inline-block ${hasArrivedNylam ? 'bg-primary/15 text-primary' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {hasArrivedNylam ? `Received ${e.totalCTN} CTN` : '⏳ Pending'}
-                            </div>
-                            {e.arrivalDateNylam && <div className="text-xs text-muted-foreground mt-1">📅 {e.arrivalDateNylam}</div>}
-                          </div>
+                          {/* Nylam — received = totalCTN if equals lhasa loaded, else totalCTN - lhasa loaded */}
+                          {(() => {
+                            const totalLhasaLoaded = lhasaEntries.reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                            const receivedAtNylam = totalLhasaLoaded > 0 && totalLhasaLoaded !== e.totalCTN
+                              ? e.totalCTN - totalLhasaLoaded
+                              : e.totalCTN;
+                            return (
+                              <div className={`min-w-[180px] border rounded-lg p-3 text-center flex-shrink-0 ${hasArrivedNylam ? 'bg-primary/5' : 'bg-yellow-50'}`}>
+                                <div className={`text-xs font-bold mb-1 ${hasArrivedNylam ? 'text-primary' : 'text-yellow-700'}`}>At Nylam</div>
+                                <div className={`text-base font-bold px-3 py-1 rounded-md inline-block ${hasArrivedNylam ? 'bg-primary/15 text-primary' : 'bg-yellow-100 text-yellow-800'}`}>
+                                  {hasArrivedNylam ? `Received ${receivedAtNylam} CTN` : '⏳ Pending'}
+                                </div>
+                                {e.arrivalDateNylam && <div className="text-xs text-muted-foreground mt-1">📅 {e.arrivalDateNylam}</div>}
+                              </div>
+                            );
+                          })()}
 
                           {/* Tatopani containers */}
                           {tatopaniWithData.map((t, i) => (
@@ -195,9 +204,10 @@ export default function TrackingPage() {
                           {lhasaEntries.length > 0 && (
                             <div className="mt-3 space-y-1.5">
                               {lhasaEntries.map((l, i) => (
-                                <div key={i} className="border rounded p-2 bg-purple-50/40 grid grid-cols-2 gap-x-4 text-xs">
+                                <div key={i} className="border rounded p-2 bg-purple-50/40 grid grid-cols-3 gap-x-4 text-xs">
                                   <div><span className="font-bold">Container {i + 1}:</span> {l.nylamContainer || '-'}</div>
                                   <div><span className="font-bold">Dispatched:</span> {l.dispatchedFromLhasa || '-'}</div>
+                                  <div><span className="font-bold">Loaded CTN:</span> {l.loadedCTN ?? '-'}</div>
                                 </div>
                               ))}
                             </div>

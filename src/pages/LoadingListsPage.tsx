@@ -629,9 +629,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA ({viewItem.lhasa.length} containers)</h4>
                     <div className="space-y-1.5">
                       {viewItem.lhasa.map((l, i) => (
-                        <div key={i} className="border rounded p-2 bg-accent/20 grid grid-cols-2 gap-1.5 text-xs">
+                        <div key={i} className="border rounded p-2 bg-accent/20 grid grid-cols-3 gap-1.5 text-xs">
                           <div><span className="font-bold">Lhasa-Nylam Container:</span> <span className="font-bold">{l.nylamContainer || '-'}</span></div>
                           <div><span className="font-bold">Dispatched from Lhasa:</span> <span className="font-bold">{l.dispatchedFromLhasa || '-'}</span></div>
+                          <div><span className="font-bold">Loaded CTN:</span> <span className="font-bold">{l.loadedCTN ?? '-'}</span></div>
                         </div>
                       ))}
                     </div>
