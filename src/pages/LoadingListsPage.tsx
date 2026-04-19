@@ -723,13 +723,36 @@ function OldNylamPage() {
     if (e) updateOldNylamEntry(id, { followUp: !e.followUp });
   };
 
+  const handleImport = (data: any[]) => {
+    data.forEach((row) => {
+      addOldNylamEntry({
+        date: row['Date'] || row['date'] || '',
+        consignmentNo: row['Consignment No.'] || row['consignmentNo'] || '',
+        marka: row['MARKA'] || row['marka'] || '',
+        totalCTN: Number(row['Total CTN'] || row['Total CTNS'] || row['totalCTN'] || 0),
+        ctnRemainingNylam: Number(row['CTN Remaining Nylam'] || row['ctnRemainingNylam'] || 0),
+        loadedCTN: Number(row['Loaded CTN'] || row['loadedCTN'] || 0),
+        cbm: Number(row['CBM'] || row['cbm'] || 0),
+        gw: Number(row['GW'] || row['gw'] || 0),
+        destination: row['Destination'] || row['destination'] || '',
+        dispatchedFromNylam: row['Dispatched from Nylam'] || row['dispatchedFromNylam'] || '',
+        nylamContainer: row['Nylam Container'] || row['nylamContainer'] || '',
+        arrivalLocation: row['Arrival Location'] || row['arrivalLocation'] || '',
+        arrivalDate: row['Arrival Date'] || row['arrivalDate'] || '',
+        client: row['Client'] || row['client'] || '',
+        followUp: false,
+        updatedAt: '',
+      } as any);
+    });
+  };
+
   return (
     <div>
       <TableToolbar
         searchValue={search} onSearchChange={setSearch}
         onAdd={() => { setEditId(null); setForm({ date: new Date().toISOString().split('T')[0], consignmentNo: '', marka: '', totalCTN: 0, ctnRemainingNylam: 0, loadedCTN: 0, cbm: 0, gw: 0, destination: '', dispatchedFromNylam: '', nylamContainer: '', arrivalLocation: '', arrivalDate: '', client: '', followUp: false }); setAddOpen(true); }}
         onExport={handleExport}
-        onImport={() => {}}
+        onImport={handleImport}
         onSelectToggle={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
         selectMode={selectMode}
         selectedCount={selected.size}
