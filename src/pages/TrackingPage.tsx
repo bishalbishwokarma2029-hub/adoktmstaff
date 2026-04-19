@@ -198,9 +198,19 @@ export default function TrackingPage() {
                       <div className="p-4 border-b">
                         <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA Details</h4>
                         <div className="border rounded p-3 text-sm">
-                          <div className="grid grid-cols-2 gap-x-8 gap-y-1">
-                            {e.arrivalAtLhasa && <><div className="text-muted-foreground">Arrival at Lhasa:</div><div className="text-right font-semibold">{e.arrivalAtLhasa}</div></>}
-                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{effectiveRemainingLhasa}</div></>}
+                          <div className="flex flex-col gap-1.5">
+                            {e.arrivalAtLhasa && (
+                              <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-yellow-100 border border-yellow-300 w-fit">
+                                <span className="text-muted-foreground">Arrival at Lhasa:</span>
+                                <span className="font-bold text-yellow-900">{e.arrivalAtLhasa}</span>
+                              </div>
+                            )}
+                            {hasRemainingLhasa && (
+                              <div className="inline-flex items-center gap-2 px-2 py-1 rounded bg-yellow-100 border border-yellow-300 w-fit">
+                                <span className="text-muted-foreground">Remaining CTN at Lhasa:</span>
+                                <span className="font-bold text-yellow-900">{effectiveRemainingLhasa}</span>
+                              </div>
+                            )}
                           </div>
                           {lhasaEntries.length > 0 && (
                             <div className="mt-3 space-y-1.5">
