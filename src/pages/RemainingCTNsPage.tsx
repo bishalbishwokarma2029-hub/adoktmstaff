@@ -37,13 +37,31 @@ export default function RemainingCTNsPage() {
     XLSX.writeFile(wb, 'remaining_ctns.xlsx');
   };
 
+  const handleImport = (data: any[]) => {
+    data.forEach((row) => {
+      addRemainingCTN({
+        date: row['Date'] || row['date'] || '',
+        consignmentNo: row['Consignment No.'] || row['consignmentNo'] || '',
+        marka: row['MARKA'] || row['marka'] || '',
+        totalCTN: Number(row['Total CTN'] || row['Total CTNS'] || row['totalCTN'] || 0),
+        cbm: Number(row['CBM'] || row['cbm'] || 0),
+        gw: Number(row['GW'] || row['gw'] || 0),
+        destination: row['Destination'] || row['destination'] || '',
+        remainingCTN: Number(row['Remaining CTN'] || row['remainingCTN'] || 0),
+        remainingCTNLocation: row['Location'] || row['Remaining CTN Location'] || row['remainingCTNLocation'] || '',
+        client: row['Client'] || row['client'] || '',
+        createdBy: '', updatedBy: '', updatedAt: '',
+      } as any);
+    });
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Remaining CTNs</h2>
       <TableToolbar
         searchValue={search} onSearchChange={setSearch}
         onAdd={() => { setEditId(null); setForm({ date: '', consignmentNo: '', marka: '', totalCTN: 0, cbm: 0, gw: 0, destination: '', remainingCTN: 0, remainingCTNLocation: '', client: '' }); setAddOpen(true); }}
-        onExport={handleExport} onImport={() => {}}
+        onExport={handleExport} onImport={handleImport}
         onSelectToggle={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
         selectMode={selectMode} selectedCount={selected.size}
       />
