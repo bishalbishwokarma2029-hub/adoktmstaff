@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
 
 /* ───── helpers ───── */
 
@@ -28,17 +27,26 @@ function userName(profiles: ProfileMap, id: string | null | undefined) {
   return profiles[id] || 'Unknown';
 }
 
-/* ───── Recent Loading Lists Tab ───── */
+/* ───── Recent Loading Lists Tab — stores files (any type) AS-IS ───── */
 
 interface LoadingListEntry {
   id: string;
   title: string | null;
-  data: any[][];
+  data: any;
   file_url: string | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+function isImageUrl(url: string) {
+  return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
+}
+function fileKindFromUrl(url: string): 'image' | 'pdf' | 'file' {
+  if (isImageUrl(url)) return 'image';
+  if (/\.pdf$/i.test(url)) return 'pdf';
+  return 'file';
 }
 
 function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
@@ -47,7 +55,8 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [editData, setEditData] = useState<any[][]>([]);
+  const [editFileUrl, setEditFileUrl] = useState<string | null>(null);
+  const [editFileName, setEditFileName] = useState<string>('');
   const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -58,7 +67,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
       .order('created_at', { ascending: false });
     setLists((data ?? []).map((d: any) => ({
       ...d,
-      data: Array.isArray(d.data) ? d.data : [],
+      data: d.data ?? null,
       file_url: d.file_url ?? null,
       updated_by: d.updated_by ?? null,
     })));
@@ -67,54 +76,34 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
 
   useEffect(() => { fetchLists(); }, [fetchLists]);
 
-  const parseExcel = (file: File): Promise<any[][]> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const wb = XLSX.read(e.target?.result, { type: 'array' });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          resolve(XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][]);
-        } catch { reject(new Error('Failed to parse excel')); }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-  const uploadExcelToStorage = async (rows: any[][], title: string): Promise<string | null> => {
+  const uploadFileAsIs = async (file: File): Promise<string | null> => {
     try {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-      const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const path = `loading-lists/${Date.now()}_${Math.random().toString(36).slice(2)}.xlsx`;
-      const { error } = await supabase.storage.from('attachments').upload(path, blob);
-      if (error) return null;
+      const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
+      const path = `loading-lists/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, file, { contentType: file.type || undefined });
+      if (error) { toast.error('Upload failed'); return null; }
       const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
       return urlData.publicUrl;
     } catch { return null; }
   };
 
   const handleFile = async (file: File) => {
-    try {
-      const rows = await parseExcel(file);
-      if (!rows.length) { toast.error('Empty file'); return; }
-      setEditTitle(file.name.replace(/\.\w+$/, ''));
-      setEditData(rows);
-      setEditId(null);
-      setShowDialog(true);
-    } catch { toast.error('Could not read file'); }
+    const url = await uploadFileAsIs(file);
+    if (!url) return;
+    setEditTitle(file.name.replace(/\.\w+$/, ''));
+    setEditFileName(file.name);
+    setEditFileUrl(url);
+    setEditId(null);
+    setShowDialog(true);
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData('text');
-    if (!text) return;
-    const rows = text.split('\n').map(r => r.split('\t'));
-    if (rows.length) {
-      setEditTitle('Pasted Data');
-      setEditData(rows);
-      setEditId(null);
-      setShowDialog(true);
+    const items = Array.from(e.clipboardData.items);
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) { e.preventDefault(); await handleFile(file); return; }
+      }
     }
   };
 
@@ -125,13 +114,11 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   };
 
   const saveList = async () => {
-    if (!editData.length) { toast.error('No data'); return; }
-    const fileUrl = await uploadExcelToStorage(editData, editTitle);
+    if (!editFileUrl) { toast.error('No file uploaded'); return; }
     if (editId) {
       await supabase.from('recent_loading_lists').update({
         title: editTitle,
-        data: editData as any,
-        file_url: fileUrl,
+        file_url: editFileUrl,
         updated_by: user?.id,
         updated_at: new Date().toISOString(),
       } as any).eq('id', editId);
@@ -139,8 +126,8 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     } else {
       await supabase.from('recent_loading_lists').insert({
         title: editTitle,
-        data: editData as any,
-        file_url: fileUrl,
+        data: { fileName: editFileName } as any,
+        file_url: editFileUrl,
         created_by: user?.id,
         updated_by: user?.id,
       } as any);
@@ -159,26 +146,19 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   const openEdit = (entry: LoadingListEntry) => {
     setEditId(entry.id);
     setEditTitle(entry.title ?? '');
-    setEditData(entry.data);
+    setEditFileUrl(entry.file_url);
+    setEditFileName((entry.data as any)?.fileName ?? entry.title ?? '');
     setShowDialog(true);
-  };
-
-  const updateCell = (r: number, c: number, val: string) => {
-    setEditData(prev => {
-      const copy = prev.map(row => [...row]);
-      copy[r][c] = val;
-      return copy;
-    });
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 flex-wrap">
         <Button size="sm" onClick={() => fileRef.current?.click()}>
-          <Upload className="h-4 w-4 mr-1" /> Upload Excel
+          <Upload className="h-4 w-4 mr-1" /> Upload File
         </Button>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = ''; }} />
-        <span className="text-xs text-muted-foreground">or drag & drop / paste (Ctrl+V) below</span>
+        <input ref={fileRef} type="file" className="hidden" onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); e.target.value = ''; }} />
+        <span className="text-xs text-muted-foreground">or drag & drop / paste (Ctrl+V) any file (image, excel, pdf...)</span>
       </div>
 
       <div
@@ -189,77 +169,77 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
         className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground hover:border-primary/40 transition-colors cursor-pointer focus:outline-none focus:border-primary/60"
       >
         <FileSpreadsheet className="h-8 w-8 mx-auto mb-2 opacity-40" />
-        <p className="text-sm">Drop Excel file here or click to paste data</p>
+        <p className="text-sm">Drop any file here or paste it (image / excel / pdf / etc.) — saved as-is</p>
       </div>
 
       {loading ? <p className="text-sm text-muted-foreground">Loading...</p> : lists.length === 0 ? <p className="text-sm text-muted-foreground">No loading lists yet.</p> : (
-        <div className="space-y-3">
-          {lists.map(entry => (
-            <Card key={entry.id} className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-semibold text-sm">{entry.title || 'Untitled'}</h4>
-                <div className="flex gap-1">
-                  {entry.file_url && (
-                    <a href={entry.file_url} download>
-                      <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
-                    </a>
-                  )}
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(entry)}><Edit2 className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteList(entry.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {lists.map(entry => {
+            const url = entry.file_url;
+            const kind = url ? fileKindFromUrl(url) : 'file';
+            return (
+              <Card key={entry.id} className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold text-sm truncate flex-1">{entry.title || 'Untitled'}</h4>
+                  <div className="flex gap-1">
+                    {url && (
+                      <a href={url} download target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
+                      </a>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(entry)}><Edit2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteList(entry.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
                 </div>
-              </div>
-              <div className="overflow-auto max-h-48 text-xs border rounded">
-                <Table>
-                  <TableBody>
-                    {(entry.data as any[][]).slice(0, 20).map((row, ri) => (
-                      <TableRow key={ri}>
-                        {row.map((cell: any, ci: number) => (
-                          ri === 0
-                            ? <TableHead key={ci} className="px-2 py-1 text-xs font-bold whitespace-nowrap">{cell ?? ''}</TableHead>
-                            : <TableCell key={ci} className="px-2 py-1 whitespace-nowrap">{cell ?? ''}</TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              {(entry.data as any[][]).length > 20 && <p className="text-xs text-muted-foreground mt-1">Showing 20 of {entry.data.length} rows</p>}
-              <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
-                <p>Created by: <strong>{userName(profiles, entry.created_by)}</strong> — {new Date(entry.created_at).toLocaleString()}</p>
-                {entry.updated_by && entry.updated_by !== entry.created_by && (
-                  <p>Updated by: <strong>{userName(profiles, entry.updated_by)}</strong> — {new Date(entry.updated_at).toLocaleString()}</p>
+                {url ? (
+                  kind === 'image' ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <img src={url} alt={entry.title ?? ''} className="w-full max-h-64 object-contain rounded border bg-muted" />
+                    </a>
+                  ) : kind === 'pdf' ? (
+                    <iframe src={url} className="w-full h-64 rounded border" title={entry.title ?? 'pdf'} />
+                  ) : (
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 border rounded bg-muted hover:bg-accent">
+                      <FileSpreadsheet className="h-5 w-5" />
+                      <span className="text-xs truncate">{(entry.data as any)?.fileName || entry.title || 'Open file'}</span>
+                    </a>
+                  )
+                ) : (
+                  <p className="text-xs text-muted-foreground">No file attached</p>
                 )}
-              </div>
-            </Card>
-          ))}
+                <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                  <p>Created by: <strong>{userName(profiles, entry.created_by)}</strong> — {new Date(entry.created_at).toLocaleString()}</p>
+                  {entry.updated_by && entry.updated_by !== entry.created_by && (
+                    <p>Updated by: <strong>{userName(profiles, entry.updated_by)}</strong> — {new Date(entry.updated_at).toLocaleString()}</p>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+        <DialogContent className="max-w-lg space-y-2">
           <DialogHeader>
             <DialogTitle>{editId ? 'Edit' : 'New'} Loading List</DialogTitle>
           </DialogHeader>
-          <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" className="mb-2" />
-          <div className="flex-1 overflow-auto border rounded text-xs">
-            <Table>
-              <TableBody>
-                {editData.map((row, ri) => (
-                  <TableRow key={ri}>
-                    {row.map((cell: any, ci: number) => (
-                      <TableCell key={ci} className="p-0">
-                        <input
-                          className="w-full px-2 py-1 text-xs border-0 bg-transparent focus:outline-none focus:bg-accent/30"
-                          value={cell ?? ''}
-                          onChange={e => updateCell(ri, ci, e.target.value)}
-                        />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" />
+          {editFileUrl ? (
+            isImageUrl(editFileUrl) ? (
+              <img src={editFileUrl} alt="" className="w-full max-h-80 object-contain rounded border" />
+            ) : (
+              <a href={editFileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-3 border rounded bg-muted">
+                <FileSpreadsheet className="h-5 w-5" />
+                <span className="text-xs truncate">{editFileName || 'Open file'}</span>
+              </a>
+            )
+          ) : (
+            <p className="text-sm text-muted-foreground">No file selected.</p>
+          )}
+          <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1" /> Replace File
+          </Button>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
             <Button onClick={saveList}><Save className="h-4 w-4 mr-1" /> Save</Button>
