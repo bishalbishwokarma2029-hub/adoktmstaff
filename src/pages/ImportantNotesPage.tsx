@@ -395,7 +395,21 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
             <DialogTitle>{editId ? 'Edit' : 'New'} Note</DialogTitle>
           </DialogHeader>
           <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} placeholder="Title" />
-          <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} placeholder="Write your note..." rows={6} />
+          <Textarea
+            value={editContent}
+            onChange={e => setEditContent(e.target.value)}
+            onPaste={async e => {
+              const items = Array.from(e.clipboardData.items);
+              for (const item of items) {
+                if (item.kind === 'file') {
+                  const file = item.getAsFile();
+                  if (file) { e.preventDefault(); await handleFileUpload(file); return; }
+                }
+              }
+            }}
+            placeholder="Write your note... (you can also paste an image directly here)"
+            rows={6}
+          />
           <div className="space-y-2">
             <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
               <Image className="h-4 w-4 mr-1" /> Attach File/Photo
