@@ -200,7 +200,7 @@ export default function TrackingPage() {
                         <div className="border rounded p-3 text-sm">
                           <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                             {e.arrivalAtLhasa && <><div className="text-muted-foreground">Arrival at Lhasa:</div><div className="text-right font-semibold">{e.arrivalAtLhasa}</div></>}
-                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{e.remainingCTNLhasa}</div></>}
+                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{effectiveRemainingLhasa}</div></>}
                           </div>
                           {lhasaEntries.length > 0 && (
                             <div className="mt-3 space-y-1.5">
