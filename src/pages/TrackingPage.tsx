@@ -70,8 +70,11 @@ export default function TrackingPage() {
                 let hasRemaining = totalLoaded > 0 && remainingAtNylam > 0;
 
                 const lhasaEntries = e.lhasa || [];
+                const totalLhasaLoaded = lhasaEntries.reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                const computedRemainingLhasa = totalLhasaLoaded > 0 ? e.totalCTN - totalLhasaLoaded : null;
+                const effectiveRemainingLhasa = e.remainingCTNLhasa ?? computedRemainingLhasa;
                 const hasLhasaInfo = lhasaEntries.length > 0 || !!(e.arrivalAtLhasa);
-                const hasRemainingLhasa = e.remainingCTNLhasa != null;
+                const hasRemainingLhasa = effectiveRemainingLhasa != null;
 
                 return (
                   <div key={e.id} className="border rounded-lg bg-card overflow-hidden">
@@ -197,7 +200,7 @@ export default function TrackingPage() {
                         <div className="border rounded p-3 text-sm">
                           <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                             {e.arrivalAtLhasa && <><div className="text-muted-foreground">Arrival at Lhasa:</div><div className="text-right font-semibold">{e.arrivalAtLhasa}</div></>}
-                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{e.remainingCTNLhasa}</div></>}
+                            {hasRemainingLhasa && <><div className="text-muted-foreground">Remaining CTN at Lhasa:</div><div className="text-right font-semibold">{effectiveRemainingLhasa}</div></>}
                           </div>
                           {lhasaEntries.length > 0 && (
                             <div className="mt-3 space-y-1.5">

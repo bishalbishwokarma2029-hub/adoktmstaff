@@ -391,13 +391,20 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{onTheWay ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{missing ?? '-'}</td>
-                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0">
-                      <DebouncedInput
-                        type="number"
-                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
-                        value={e.remainingCTNLhasa ?? ''}
-                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
-                      />
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto: Total CTNS − sum of Loaded CTN inside LHASA. Editable.">
+                      {(() => {
+                        const totalLhasaLoaded = (e.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                        const auto = totalLhasaLoaded > 0 ? e.totalCTN - totalLhasaLoaded : null;
+                        const displayed = e.remainingCTNLhasa ?? auto ?? '';
+                        return (
+                          <DebouncedInput
+                            type="number"
+                            className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                            value={displayed}
+                            onChange={(v) => store.updateLoadingListEntry(e.id, origin, { remainingCTNLhasa: v === '' ? null : Number(v) } as any)}
+                          />
+                        );
+                      })()}
                     </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold" title="Auto: Total - Remaining at Lhasa - Loaded Tatopani - Loaded Kerung">{remaining ?? '-'}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.client}</td>
