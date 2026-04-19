@@ -70,8 +70,11 @@ export default function TrackingPage() {
                 let hasRemaining = totalLoaded > 0 && remainingAtNylam > 0;
 
                 const lhasaEntries = e.lhasa || [];
+                const totalLhasaLoaded = lhasaEntries.reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                const computedRemainingLhasa = totalLhasaLoaded > 0 ? e.totalCTN - totalLhasaLoaded : null;
+                const effectiveRemainingLhasa = e.remainingCTNLhasa ?? computedRemainingLhasa;
                 const hasLhasaInfo = lhasaEntries.length > 0 || !!(e.arrivalAtLhasa);
-                const hasRemainingLhasa = e.remainingCTNLhasa != null;
+                const hasRemainingLhasa = effectiveRemainingLhasa != null;
 
                 return (
                   <div key={e.id} className="border rounded-lg bg-card overflow-hidden">
