@@ -146,12 +146,10 @@ export default function TrackingPage() {
                             </React.Fragment>
                           ))}
 
-                          {/* Nylam — received = totalCTN if equals lhasa loaded, else totalCTN - lhasa loaded */}
+                          {/* Nylam — received = sum of Lhasa Loaded CTN if present, else totalCTN */}
                           {(() => {
                             const totalLhasaLoaded = lhasaEntries.reduce((s, l) => s + (l.loadedCTN || 0), 0);
-                            const receivedAtNylam = totalLhasaLoaded > 0 && totalLhasaLoaded !== e.totalCTN
-                              ? e.totalCTN - totalLhasaLoaded
-                              : e.totalCTN;
+                            const receivedAtNylam = totalLhasaLoaded > 0 ? totalLhasaLoaded : e.totalCTN;
                             return (
                               <div className={`min-w-[180px] border rounded-lg p-3 text-center flex-shrink-0 ${hasArrivedNylam ? 'bg-primary/5' : 'bg-yellow-50'}`}>
                                 <div className={`text-xs font-bold mb-1 ${hasArrivedNylam ? 'text-primary' : 'text-yellow-700'}`}>At Nylam</div>
