@@ -18,6 +18,8 @@ export default function ContainersPage() {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editContainer, setEditContainer] = useState<string | null>(null);
+  const [editOriginalContainer, setEditOriginalContainer] = useState<string>('');
+  const [editOriginalDate, setEditOriginalDate] = useState<string>('');
   const [editType, setEditType] = useState<'origin' | 'kerung' | 'tatopani'>('origin');
   const [editForm, setEditForm] = useState({ containerNo: '', dispatchedDate: '', dispatchedFrom: '', arrivalDate: '', arrivalLocation: '' });
   const [addOpen, setAddOpen] = useState(false);
@@ -88,31 +90,39 @@ export default function ContainersPage() {
 
   const handleEdit = (c: typeof filtered[0]) => {
     setEditContainer(c.containerNo);
+    setEditOriginalContainer(c.containerNo);
+    setEditOriginalDate(c.dispatchedDate);
     setEditType(c.type);
     setEditForm({ containerNo: c.containerNo, dispatchedDate: c.dispatchedDate, dispatchedFrom: c.dispatchedFrom, arrivalDate: c.arrivalDate, arrivalLocation: c.arrivalLocation });
   };
 
   const handleEditSave = () => {
-    const old = containerMap.find(c => c.containerNo === editContainer);
-    if (!old) return;
+    const old = containerMap.find(c => c.containerNo === editOriginalContainer && c.dispatchedDate === editOriginalDate);
+    if (!old) {
+      toast({ title: 'Error', description: 'Container not found', variant: 'destructive' });
+      return;
+    }
     old.entries.forEach(entry => {
-      const origin = entry.origin;
+      // If user changed origin (Guangzhou/Yiwu) for origin-type rows, we keep entry.origin as-is (moving entries between origin lists is non-trivial); we just update the visible fields.
       if (old.type === 'origin') {
-        updateLoadingListEntry(entry.id, origin, {
-          container: editForm.containerNo,
-          dispatchedFrom: editForm.dispatchedDate,
-          arrivalDateNylam: editForm.arrivalDate,
-        });
+        if (entry.container === editOriginalContainer) {
+          updateLoadingListEntry(entry.id, entry.origin, {
+            container: editForm.containerNo,
+            dispatchedFrom: editForm.dispatchedDate,
+            arrivalDateNylam: editForm.arrivalDate,
+          });
+        }
       }
       if (old.type === 'kerung') {
-        const newKerung = entry.kerung.map(k => k.nylamContainer === editContainer ? { ...k, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : k);
-        updateLoadingListEntry(entry.id, origin, { kerung: newKerung });
+        const newKerung = entry.kerung.map(k => k.nylamContainer === editOriginalContainer ? { ...k, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : k);
+        updateLoadingListEntry(entry.id, entry.origin, { kerung: newKerung });
       }
       if (old.type === 'tatopani') {
-        const newTatopani = entry.tatopani.map(t => t.nylamContainer === editContainer ? { ...t, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : t);
-        updateLoadingListEntry(entry.id, origin, { tatopani: newTatopani });
+        const newTatopani = entry.tatopani.map(t => t.nylamContainer === editOriginalContainer ? { ...t, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : t);
+        updateLoadingListEntry(entry.id, entry.origin, { tatopani: newTatopani });
       }
     });
+    toast({ title: 'Saved', description: 'Container updated successfully' });
     setEditContainer(null);
   };
 
@@ -322,11 +332,19 @@ export default function ContainersPage() {
           <DialogHeader><DialogTitle className="font-bold">Edit Container</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><label className="text-xs font-medium">Container No.</label><Input value={editForm.containerNo} onChange={(e) => setEditForm({ ...editForm, containerNo: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched Date</label><Input value={editForm.dispatchedDate} onChange={(e) => setEditForm({ ...editForm, dispatchedDate: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched From</label><Input value={editForm.dispatchedFrom} onChange={(e) => setEditForm({ ...editForm, dispatchedFrom: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival Date</label><Input value={editForm.arrivalDate} onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival Location</label><Input value={editForm.arrivalLocation} onChange={(e) => setEditForm({ ...editForm, arrivalLocation: e.target.value })} /></div>
-            <Button onClick={handleEditSave} className="w-full">Save</Button>
+            <div><label className="text-xs font-medium">Dispatched Date</label><Input type="date" value={editForm.dispatchedDate} onChange={(e) => setEditForm({ ...editForm, dispatchedDate: e.target.value })} /></div>
+            <div>
+              <label className="text-xs font-medium">Dispatched From</label>
+              <Input value={editForm.dispatchedFrom} onChange={(e) => setEditForm({ ...editForm, dispatchedFrom: e.target.value })} placeholder="e.g. Guangzhou / Yiwu / Nylam" />
+              <p className="text-[10px] text-muted-foreground mt-1">Note: Dispatched From is derived from the consignment's origin/section and is shown for reference.</p>
+            </div>
+            <div><label className="text-xs font-medium">Arrival Date</label><Input type="date" value={editForm.arrivalDate} onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })} /></div>
+            <div>
+              <label className="text-xs font-medium">Arrival Location</label>
+              <Input value={editForm.arrivalLocation} onChange={(e) => setEditForm({ ...editForm, arrivalLocation: e.target.value })} placeholder="e.g. Nylam / Kerung / Tatopani" />
+              <p className="text-[10px] text-muted-foreground mt-1">Note: Arrival Location is derived from the section (Kerung/Tatopani/Nylam).</p>
+            </div>
+            <Button onClick={handleEditSave} className="w-full">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
