@@ -332,11 +332,19 @@ export default function ContainersPage() {
           <DialogHeader><DialogTitle className="font-bold">Edit Container</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><label className="text-xs font-medium">Container No.</label><Input value={editForm.containerNo} onChange={(e) => setEditForm({ ...editForm, containerNo: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched Date</label><Input value={editForm.dispatchedDate} onChange={(e) => setEditForm({ ...editForm, dispatchedDate: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched From</label><Input value={editForm.dispatchedFrom} onChange={(e) => setEditForm({ ...editForm, dispatchedFrom: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival Date</label><Input value={editForm.arrivalDate} onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival Location</label><Input value={editForm.arrivalLocation} onChange={(e) => setEditForm({ ...editForm, arrivalLocation: e.target.value })} /></div>
-            <Button onClick={handleEditSave} className="w-full">Save</Button>
+            <div><label className="text-xs font-medium">Dispatched Date</label><Input type="date" value={editForm.dispatchedDate} onChange={(e) => setEditForm({ ...editForm, dispatchedDate: e.target.value })} /></div>
+            <div>
+              <label className="text-xs font-medium">Dispatched From</label>
+              <Input value={editForm.dispatchedFrom} onChange={(e) => setEditForm({ ...editForm, dispatchedFrom: e.target.value })} placeholder="e.g. Guangzhou / Yiwu / Nylam" />
+              <p className="text-[10px] text-muted-foreground mt-1">Note: Dispatched From is derived from the consignment's origin/section and is shown for reference.</p>
+            </div>
+            <div><label className="text-xs font-medium">Arrival Date</label><Input type="date" value={editForm.arrivalDate} onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })} /></div>
+            <div>
+              <label className="text-xs font-medium">Arrival Location</label>
+              <Input value={editForm.arrivalLocation} onChange={(e) => setEditForm({ ...editForm, arrivalLocation: e.target.value })} placeholder="e.g. Nylam / Kerung / Tatopani" />
+              <p className="text-[10px] text-muted-foreground mt-1">Note: Arrival Location is derived from the section (Kerung/Tatopani/Nylam).</p>
+            </div>
+            <Button onClick={handleEditSave} className="w-full">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
