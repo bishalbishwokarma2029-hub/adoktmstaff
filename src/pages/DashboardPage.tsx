@@ -6,6 +6,30 @@ import { Search, Eye, Users, Package, TrendingUp, MapPin, BarChart3, List, Alert
 import { getStatusClass, getDestinationClass } from '@/types';
 import type { LoadingListEntry } from '@/types';
 
+function calcRemainingAtNylam(e: LoadingListEntry): number | null {
+  const lhasa = e.remainingCTNLhasa ?? 0;
+  let totalLoaded = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.loadedCTN) { totalLoaded += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.loadedCTN) { totalLoaded += k.loadedCTN; hasAny = true; } });
+  if (!hasAny && e.remainingCTNLhasa == null) return null;
+  return e.totalCTN - lhasa - totalLoaded;
+}
+function calcOnTheWay(e: LoadingListEntry): number | null {
+  let total = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.status === 'On the way to Tatopani' && t.loadedCTN) { total += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.status === 'On the way to Kerung' && k.loadedCTN) { total += k.loadedCTN; hasAny = true; } });
+  return hasAny ? total : null;
+}
+function calcMissing(e: LoadingListEntry): number | null {
+  let missing = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.receivedCTN != null && t.loadedCTN && !t.status?.includes('On the way')) { missing += (t.loadedCTN - t.receivedCTN); hasAny = true; } });
+  e.kerung.forEach(k => { if (k.receivedCTN != null && k.loadedCTN && !k.status?.includes('On the way')) { missing += (k.loadedCTN - k.receivedCTN); hasAny = true; } });
+  return hasAny ? missing : null;
+}
+
 function MiniPieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   if (total === 0) return <div className="text-sm text-muted-foreground text-center py-4 font-bold">No data</div>;
@@ -297,22 +321,38 @@ export default function DashboardPage() {
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">⚖️ GW (KG)</span><span className="font-bold">{viewLoadingEntry.gw}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📍 Destination</span><span className={`font-bold ${getDestinationClass(viewLoadingEntry.destination)}`}>{viewLoadingEntry.destination}</span></div>
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📋 LOT No.</span><span className="font-bold">{viewLoadingEntry.lotNo || '-'}</span></div>
-                  <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched</span><span className="font-bold">{viewLoadingEntry.dispatchedFrom || '-'}</span></div>
-                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 Container</span><span className="font-bold">{viewLoadingEntry.container || '-'}</span></div>
+                  <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from {viewLoadingEntry.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu'}</span><span className="font-bold">{viewLoadingEntry.dispatchedFrom || '-'}</span></div>
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 {viewLoadingEntry.origin === 'guangzhou' ? 'Guangzhou' : 'Yiwu'} Container</span><span className="font-bold">{viewLoadingEntry.container || '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Nylam</span><span className="font-bold">{viewLoadingEntry.arrivalDateNylam || '-'}</span></div>
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">👤 Client</span><span className="font-bold text-lg">{viewLoadingEntry.client || '-'}</span></div>
                   {viewLoadingEntry.arrivalAtLhasa && (
                     <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Lhasa</span><span className="font-bold">{viewLoadingEntry.arrivalAtLhasa}</span></div>
                   )}
-                  {viewLoadingEntry.lhasaContainer && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 Lhasa Container</span><span className="font-bold">{viewLoadingEntry.lhasaContainer}</span></div>
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🔄 On the Way</span><span className="text-xl font-bold">{calcOnTheWay(viewLoadingEntry) ?? '-'}</span></div>
+                  <div className="border rounded p-2 bg-destructive/10"><span className="text-xs font-bold uppercase text-muted-foreground block">⚠️ Missing CTN</span><span className="text-xl font-bold">{calcMissing(viewLoadingEntry) ?? '-'}</span></div>
+                  {viewLoadingEntry.remainingCTNLhasa != null && (
+                    <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Lhasa</span><span className="text-xl font-bold">{viewLoadingEntry.remainingCTNLhasa}</span></div>
                   )}
-                  {viewLoadingEntry.dispatchedFromLhasa && (
-                    <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from Lhasa</span><span className="font-bold">{viewLoadingEntry.dispatchedFromLhasa}</span></div>
-                  )}
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Remaining CTN at Nylam</span><span className="text-xl font-bold">{calcRemainingAtNylam(viewLoadingEntry) ?? '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">✅ Follow Up</span><span className="font-bold">{viewLoadingEntry.followUp ? '✅ Done' : '⬜ Pending'}</span></div>
                   <div className="border rounded p-2 col-span-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📝 Remarks</span><span className="font-bold">{viewLoadingEntry.remarks || '-'}</span></div>
                 </div>
+
+                {/* LHASA list - only if filled */}
+                {(viewLoadingEntry.lhasa?.length ?? 0) > 0 && (
+                  <div className="border rounded-lg p-3">
+                    <h4 className="font-bold text-sm mb-2 text-purple-700">🏔️ LHASA ({viewLoadingEntry.lhasa.length} containers)</h4>
+                    <div className="space-y-1.5">
+                      {viewLoadingEntry.lhasa.map((l, i) => (
+                        <div key={i} className="border rounded p-2 bg-accent/20 grid grid-cols-3 gap-1.5 text-xs">
+                          <div><span className="font-bold">Lhasa-Nylam Container:</span> <span className="font-bold">{l.nylamContainer || '-'}</span></div>
+                          <div><span className="font-bold">Dispatched from Lhasa:</span> <span className="font-bold">{l.dispatchedFromLhasa || '-'}</span></div>
+                          <div><span className="font-bold">Loaded CTN:</span> <span className="font-bold">{l.loadedCTN ?? '-'}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* TATOPANI & KERUNG side by side */}
                 <div className="grid grid-cols-2 gap-3">
@@ -325,7 +365,7 @@ export default function DashboardPage() {
                         <div><span className="font-bold">Container:</span> <span className="font-bold">{t.nylamContainer || '-'}</span></div>
                         <div><span className="font-bold">Status:</span> <span className={`font-bold ${getStatusClass(t.status)}`}>{t.status || '-'}</span></div>
                         <div><span className="font-bold">Received:</span> <span className="font-bold">{t.receivedCTN ?? '-'}</span></div>
-                        <div><span className="font-bold">Arrival:</span> <span className="font-bold">{t.arrivalDate || '-'}</span></div>
+                        <div><span className="font-bold">Arrival at Tatopani:</span> <span className="font-bold">{t.arrivalDate || '-'}</span></div>
                       </div>
                     ))}
                   </div>
@@ -338,7 +378,7 @@ export default function DashboardPage() {
                         <div><span className="font-bold">Container:</span> <span className="font-bold">{k.nylamContainer || '-'}</span></div>
                         <div><span className="font-bold">Status:</span> <span className={`font-bold ${getStatusClass(k.status)}`}>{k.status || '-'}</span></div>
                         <div><span className="font-bold">Received:</span> <span className="font-bold">{k.receivedCTN ?? '-'}</span></div>
-                        <div><span className="font-bold">Arrival:</span> <span className="font-bold">{k.arrivalDate || '-'}</span></div>
+                        <div><span className="font-bold">Arrival at Kerung:</span> <span className="font-bold">{k.arrivalDate || '-'}</span></div>
                       </div>
                     ))}
                   </div>
