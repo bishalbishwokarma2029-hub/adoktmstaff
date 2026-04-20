@@ -48,12 +48,9 @@ function FollowUpTable({ entries, type }: { entries: LoadingListEntry[]; type: '
 
   const openEdit = (e: LoadingListEntry) => {
     setEditForm({
-      date: e.date, consignmentNo: e.consignmentNo, marka: e.marka, totalCTN: e.totalCTN,
+      consignmentNo: e.consignmentNo, marka: e.marka, totalCTN: e.totalCTN,
       cbm: e.cbm, gw: e.gw, destination: e.destination, status: e.status,
-      client: e.client, remarks: e.remarks, followUp: e.followUp,
-      lotNo: e.lotNo, dispatchedFrom: e.dispatchedFrom, container: e.container,
-      arrivalDateNylam: e.arrivalDateNylam, arrivalAtLhasa: e.arrivalAtLhasa,
-      lhasaContainer: e.lhasaContainer, dispatchedFromLhasa: e.dispatchedFromLhasa,
+      client: e.client, remarks: e.remarks,
     });
     setEditId(e.id);
   };
