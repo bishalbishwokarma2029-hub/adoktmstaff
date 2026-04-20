@@ -6,6 +6,30 @@ import { Search, Eye, Users, Package, TrendingUp, MapPin, BarChart3, List, Alert
 import { getStatusClass, getDestinationClass } from '@/types';
 import type { LoadingListEntry } from '@/types';
 
+function calcRemainingAtNylam(e: LoadingListEntry): number | null {
+  const lhasa = e.remainingCTNLhasa ?? 0;
+  let totalLoaded = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.loadedCTN) { totalLoaded += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.loadedCTN) { totalLoaded += k.loadedCTN; hasAny = true; } });
+  if (!hasAny && e.remainingCTNLhasa == null) return null;
+  return e.totalCTN - lhasa - totalLoaded;
+}
+function calcOnTheWay(e: LoadingListEntry): number | null {
+  let total = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.status === 'On the way to Tatopani' && t.loadedCTN) { total += t.loadedCTN; hasAny = true; } });
+  e.kerung.forEach(k => { if (k.status === 'On the way to Kerung' && k.loadedCTN) { total += k.loadedCTN; hasAny = true; } });
+  return hasAny ? total : null;
+}
+function calcMissing(e: LoadingListEntry): number | null {
+  let missing = 0;
+  let hasAny = false;
+  e.tatopani.forEach(t => { if (t.receivedCTN != null && t.loadedCTN && !t.status?.includes('On the way')) { missing += (t.loadedCTN - t.receivedCTN); hasAny = true; } });
+  e.kerung.forEach(k => { if (k.receivedCTN != null && k.loadedCTN && !k.status?.includes('On the way')) { missing += (k.loadedCTN - k.receivedCTN); hasAny = true; } });
+  return hasAny ? missing : null;
+}
+
 function MiniPieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   if (total === 0) return <div className="text-sm text-muted-foreground text-center py-4 font-bold">No data</div>;
