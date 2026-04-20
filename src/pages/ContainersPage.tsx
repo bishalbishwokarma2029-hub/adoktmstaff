@@ -18,6 +18,8 @@ export default function ContainersPage() {
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editContainer, setEditContainer] = useState<string | null>(null);
+  const [editOriginalContainer, setEditOriginalContainer] = useState<string>('');
+  const [editOriginalDate, setEditOriginalDate] = useState<string>('');
   const [editType, setEditType] = useState<'origin' | 'kerung' | 'tatopani'>('origin');
   const [editForm, setEditForm] = useState({ containerNo: '', dispatchedDate: '', dispatchedFrom: '', arrivalDate: '', arrivalLocation: '' });
   const [addOpen, setAddOpen] = useState(false);
