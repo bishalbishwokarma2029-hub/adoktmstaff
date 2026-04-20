@@ -48,12 +48,9 @@ function FollowUpTable({ entries, type }: { entries: LoadingListEntry[]; type: '
 
   const openEdit = (e: LoadingListEntry) => {
     setEditForm({
-      date: e.date, consignmentNo: e.consignmentNo, marka: e.marka, totalCTN: e.totalCTN,
+      consignmentNo: e.consignmentNo, marka: e.marka, totalCTN: e.totalCTN,
       cbm: e.cbm, gw: e.gw, destination: e.destination, status: e.status,
-      client: e.client, remarks: e.remarks, followUp: e.followUp,
-      lotNo: e.lotNo, dispatchedFrom: e.dispatchedFrom, container: e.container,
-      arrivalDateNylam: e.arrivalDateNylam, arrivalAtLhasa: e.arrivalAtLhasa,
-      lhasaContainer: e.lhasaContainer, dispatchedFromLhasa: e.dispatchedFromLhasa,
+      client: e.client, remarks: e.remarks,
     });
     setEditId(e.id);
   };
@@ -155,35 +152,30 @@ function FollowUpTable({ entries, type }: { entries: LoadingListEntry[]; type: '
       <Dialog open={!!editId} onOpenChange={() => setEditId(null)}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-bold">Edit Follow Up Entry</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-2">
-            <div><label className="text-xs font-medium">Date</label><Input type="date" value={editForm.date || ''} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Consignment No.</label><Input value={editForm.consignmentNo || ''} onChange={(e) => setEditForm({ ...editForm, consignmentNo: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">MARKA</label><Input value={editForm.marka || ''} onChange={(e) => setEditForm({ ...editForm, marka: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Total CTN</label><Input type="number" value={editForm.totalCTN || 0} onChange={(e) => setEditForm({ ...editForm, totalCTN: Number(e.target.value) })} /></div>
-            <div><label className="text-xs font-medium">CBM</label><Input type="number" step="0.01" value={editForm.cbm || 0} onChange={(e) => setEditForm({ ...editForm, cbm: Number(e.target.value) })} /></div>
-            <div><label className="text-xs font-medium">GW</label><Input type="number" step="0.01" value={editForm.gw || 0} onChange={(e) => setEditForm({ ...editForm, gw: Number(e.target.value) })} /></div>
-            <div><label className="text-xs font-medium">Destination</label>
-              <Select value={editForm.destination || 'TATOPANI'} onValueChange={(v) => setEditForm({ ...editForm, destination: v as Destination })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{DESTINATIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-              </Select>
+          {editItem && (
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs font-medium">Consignment No.</label><Input value={editForm.consignmentNo || ''} onChange={(e) => setEditForm({ ...editForm, consignmentNo: e.target.value })} /></div>
+              <div><label className="text-xs font-medium">MARKA</label><Input value={editForm.marka || ''} onChange={(e) => setEditForm({ ...editForm, marka: e.target.value })} /></div>
+              <div><label className="text-xs font-medium">Total CTN</label><Input type="number" value={editForm.totalCTN || 0} onChange={(e) => setEditForm({ ...editForm, totalCTN: Number(e.target.value) })} /></div>
+              <div><label className="text-xs font-medium">Received CTN</label><Input type="number" value={getTotalReceived(editItem)} disabled readOnly /></div>
+              <div><label className="text-xs font-medium">CBM</label><Input type="number" step="0.01" value={editForm.cbm || 0} onChange={(e) => setEditForm({ ...editForm, cbm: Number(e.target.value) })} /></div>
+              <div><label className="text-xs font-medium">GW</label><Input type="number" step="0.01" value={editForm.gw || 0} onChange={(e) => setEditForm({ ...editForm, gw: Number(e.target.value) })} /></div>
+              <div><label className="text-xs font-medium">Destination</label>
+                <Select value={editForm.destination || 'TATOPANI'} onValueChange={(v) => setEditForm({ ...editForm, destination: v as Destination })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{DESTINATIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><label className="text-xs font-medium">Status</label>
+                <Select value={editForm.status || 'none'} onValueChange={(v) => setEditForm({ ...editForm, status: v === 'none' ? '' : v as ConsignmentStatus })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="none">--</SelectItem>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2"><label className="text-xs font-medium">Client Name</label><Input value={editForm.client || ''} onChange={(e) => setEditForm({ ...editForm, client: e.target.value })} /></div>
+              <div className="col-span-2"><label className="text-xs font-medium">Remarks</label><Input value={editForm.remarks || ''} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} /></div>
             </div>
-            <div><label className="text-xs font-medium">Status</label>
-              <Select value={editForm.status || 'none'} onValueChange={(v) => setEditForm({ ...editForm, status: v === 'none' ? '' : v as ConsignmentStatus })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="none">--</SelectItem>{STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><label className="text-xs font-medium">Client</label><Input value={editForm.client || ''} onChange={(e) => setEditForm({ ...editForm, client: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">LOT No.</label><Input value={editForm.lotNo || ''} onChange={(e) => setEditForm({ ...editForm, lotNo: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched From</label><Input value={editForm.dispatchedFrom || ''} onChange={(e) => setEditForm({ ...editForm, dispatchedFrom: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Container</label><Input value={editForm.container || ''} onChange={(e) => setEditForm({ ...editForm, container: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival at Nylam</label><Input type="date" value={editForm.arrivalDateNylam || ''} onChange={(e) => setEditForm({ ...editForm, arrivalDateNylam: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Arrival at Lhasa</label><Input type="date" value={editForm.arrivalAtLhasa || ''} onChange={(e) => setEditForm({ ...editForm, arrivalAtLhasa: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Lhasa Container</label><Input value={editForm.lhasaContainer || ''} onChange={(e) => setEditForm({ ...editForm, lhasaContainer: e.target.value })} /></div>
-            <div><label className="text-xs font-medium">Dispatched from Lhasa</label><Input value={editForm.dispatchedFromLhasa || ''} onChange={(e) => setEditForm({ ...editForm, dispatchedFromLhasa: e.target.value })} /></div>
-            <div className="col-span-2"><label className="text-xs font-medium">Remarks</label><Input value={editForm.remarks || ''} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} /></div>
-          </div>
+          )}
           <Button onClick={saveEdit} className="w-full mt-3">Save</Button>
         </DialogContent>
       </Dialog>
