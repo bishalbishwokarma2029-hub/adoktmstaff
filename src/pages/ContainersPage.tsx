@@ -90,31 +90,39 @@ export default function ContainersPage() {
 
   const handleEdit = (c: typeof filtered[0]) => {
     setEditContainer(c.containerNo);
+    setEditOriginalContainer(c.containerNo);
+    setEditOriginalDate(c.dispatchedDate);
     setEditType(c.type);
     setEditForm({ containerNo: c.containerNo, dispatchedDate: c.dispatchedDate, dispatchedFrom: c.dispatchedFrom, arrivalDate: c.arrivalDate, arrivalLocation: c.arrivalLocation });
   };
 
   const handleEditSave = () => {
-    const old = containerMap.find(c => c.containerNo === editContainer);
-    if (!old) return;
+    const old = containerMap.find(c => c.containerNo === editOriginalContainer && c.dispatchedDate === editOriginalDate);
+    if (!old) {
+      toast({ title: 'Error', description: 'Container not found', variant: 'destructive' });
+      return;
+    }
     old.entries.forEach(entry => {
-      const origin = entry.origin;
+      // If user changed origin (Guangzhou/Yiwu) for origin-type rows, we keep entry.origin as-is (moving entries between origin lists is non-trivial); we just update the visible fields.
       if (old.type === 'origin') {
-        updateLoadingListEntry(entry.id, origin, {
-          container: editForm.containerNo,
-          dispatchedFrom: editForm.dispatchedDate,
-          arrivalDateNylam: editForm.arrivalDate,
-        });
+        if (entry.container === editOriginalContainer) {
+          updateLoadingListEntry(entry.id, entry.origin, {
+            container: editForm.containerNo,
+            dispatchedFrom: editForm.dispatchedDate,
+            arrivalDateNylam: editForm.arrivalDate,
+          });
+        }
       }
       if (old.type === 'kerung') {
-        const newKerung = entry.kerung.map(k => k.nylamContainer === editContainer ? { ...k, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : k);
-        updateLoadingListEntry(entry.id, origin, { kerung: newKerung });
+        const newKerung = entry.kerung.map(k => k.nylamContainer === editOriginalContainer ? { ...k, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : k);
+        updateLoadingListEntry(entry.id, entry.origin, { kerung: newKerung });
       }
       if (old.type === 'tatopani') {
-        const newTatopani = entry.tatopani.map(t => t.nylamContainer === editContainer ? { ...t, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : t);
-        updateLoadingListEntry(entry.id, origin, { tatopani: newTatopani });
+        const newTatopani = entry.tatopani.map(t => t.nylamContainer === editOriginalContainer ? { ...t, nylamContainer: editForm.containerNo, dispatchedFromNylam: editForm.dispatchedDate, arrivalDate: editForm.arrivalDate } : t);
+        updateLoadingListEntry(entry.id, entry.origin, { tatopani: newTatopani });
       }
     });
+    toast({ title: 'Saved', description: 'Container updated successfully' });
     setEditContainer(null);
   };
 
