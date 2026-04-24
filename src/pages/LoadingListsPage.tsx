@@ -378,7 +378,40 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                         {isLhasaExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} LHASA{(e.lhasa?.length ?? 0) > 0 ? ` (${e.lhasa.length})` : ''}
                       </button>
                     </td>
-                    <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalDateNylam}</td>
+                    <td className="p-1.5 whitespace-nowrap font-bold align-top">
+                      {(() => {
+                        const dates = (e.arrivalDateNylam || '').split(',').map(d => d.trim()).filter(Boolean);
+                        const updateDates = (next: string[]) => store.updateLoadingListEntry(e.id, origin, { arrivalDateNylam: next.join(', ') } as any);
+                        return (
+                          <div className="flex flex-col gap-1 min-w-[150px]">
+                            {dates.length === 0 && <span className="text-xs text-muted-foreground italic">No dates</span>}
+                            {dates.map((d, di) => (
+                              <div key={di} className="flex items-center gap-1">
+                                <Input
+                                  type="date"
+                                  className="h-6 text-xs px-1 font-bold"
+                                  value={d}
+                                  onChange={(ev) => { const nd = [...dates]; nd[di] = ev.target.value; updateDates(nd); }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => updateDates(dates.filter((_, i) => i !== di))}
+                                  className="text-destructive hover:bg-accent rounded px-1 text-xs"
+                                  title="Remove date"
+                                >×</button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 text-[10px] px-1 self-start text-primary hover:underline"
+                              onClick={() => updateDates([...dates, ''])}
+                            >+ Add date</Button>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
                         {isKerungExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} KERUNG
