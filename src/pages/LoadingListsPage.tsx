@@ -380,34 +380,34 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     </td>
                     <td className="p-1.5 whitespace-nowrap font-bold align-top">
                       {(() => {
-                        const dates = (e.arrivalDateNylam || '').split(',').map(d => d.trim()).filter(Boolean);
+                        const raw = e.arrivalDateNylam || '';
+                        // Preserve empty slots so newly-added blank dates remain editable
+                        const dates = raw === '' ? [] : raw.split(',').map(d => d.trim());
                         const updateDates = (next: string[]) => store.updateLoadingListEntry(e.id, origin, { arrivalDateNylam: next.join(', ') } as any);
                         return (
-                          <div className="flex flex-col gap-1 min-w-[150px]">
+                          <div className="flex flex-col gap-1 min-w-[160px]">
                             {dates.length === 0 && <span className="text-xs text-muted-foreground italic">No dates</span>}
                             {dates.map((d, di) => (
                               <div key={di} className="flex items-center gap-1">
                                 <Input
                                   type="date"
-                                  className="h-6 text-xs px-1 font-bold"
+                                  className="h-7 text-xs px-1 font-bold"
                                   value={d}
                                   onChange={(ev) => { const nd = [...dates]; nd[di] = ev.target.value; updateDates(nd); }}
                                 />
                                 <button
                                   type="button"
                                   onClick={() => updateDates(dates.filter((_, i) => i !== di))}
-                                  className="text-destructive hover:bg-accent rounded px-1 text-xs"
+                                  className="text-destructive hover:bg-accent rounded px-1.5 text-sm font-bold leading-none"
                                   title="Remove date"
                                 >×</button>
                               </div>
                             ))}
-                            <Button
+                            <button
                               type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-5 text-[10px] px-1 self-start text-primary hover:underline"
+                              className="text-[11px] px-1 self-start text-primary hover:underline font-bold"
                               onClick={() => updateDates([...dates, ''])}
-                            >+ Add date</Button>
+                            >+ Add date</button>
                           </div>
                         );
                       })()}
