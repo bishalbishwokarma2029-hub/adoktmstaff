@@ -49,6 +49,7 @@ export interface LhasaDetails {
   nylamContainer: string;
   dispatchedFromLhasa: string;
   loadedCTN: number | null;
+  arrivedAtNylam?: string;
 }
 
 export interface Consignment {
