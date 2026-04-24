@@ -470,6 +470,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                                       <label className="text-xs text-muted-foreground">Loaded CTN</label>
                                       <DebouncedInput type="number" className="h-7 text-xs" value={l.loadedCTN ?? (e.totalCTN || '')} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], loadedCTN: v === '' ? null : Number(v) }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
                                     </div>
+                                    <div>
+                                      <label className="text-xs text-muted-foreground">Arrived at Nylam</label>
+                                      <DebouncedInput type="date" delay={100} className="h-7 text-xs" value={l.arrivedAtNylam || ''} onChange={(v) => { const nl = [...(e.lhasa || [])]; nl[li] = { ...nl[li], arrivedAtNylam: v }; store.updateLoadingListEntry(e.id, origin, { lhasa: nl } as any); }} />
+                                    </div>
                                   </div>
                                 </div>
                               ))}
