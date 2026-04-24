@@ -25,7 +25,7 @@ const COMPANY_HEADER = [
 ];
 const emptyKerung = (): KerungDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
 const emptyTatopani = (): TatopaniDetails => ({ dispatchedFromNylam: '', loadedCTN: null, nylamContainer: '', status: '', receivedCTN: null, arrivalDate: '' });
-const emptyLhasa = (loadedCTN: number | null = null): LhasaDetails => ({ nylamContainer: '', dispatchedFromLhasa: '', loadedCTN });
+const emptyLhasa = (loadedCTN: number | null = null): LhasaDetails => ({ nylamContainer: '', dispatchedFromLhasa: '', loadedCTN, arrivedAtNylam: '' });
 
 function calcRemainingAtNylam(e: LoadingListEntry): number | null {
   const lhasa = e.remainingCTNLhasa ?? 0;
