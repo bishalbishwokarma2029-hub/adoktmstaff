@@ -186,8 +186,11 @@ export default function LotwisePage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(l => (
-              <tr key={l.lotNo} className="border-b hover:bg-accent/50 cursor-pointer">
+            {filtered.map(l => {
+              const from = (l.dispatchedFrom || '').toLowerCase();
+              const rowColor = from === 'guangzhou' ? 'text-blue-700' : from === 'yiwu' ? 'text-purple-700' : '';
+              return (
+              <tr key={l.lotNo} className={`border-b hover:bg-accent/50 cursor-pointer ${rowColor}`}>
                 <td className="p-2 font-bold text-primary" onClick={() => navigate(`/lotwise/${encodeURIComponent(l.lotNo)}`)}>{l.lotNo}</td>
                 <td className="p-2 font-bold">{l.container}</td>
                 <td className="p-2 font-bold">{l.entries.length}</td>
@@ -204,7 +207,8 @@ export default function LotwisePage() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {filtered.length === 0 && <tr><td colSpan={9} className="p-8 text-center text-muted-foreground font-bold">No lots found</td></tr>}
           </tbody>
         </table>

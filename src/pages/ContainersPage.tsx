@@ -278,8 +278,16 @@ export default function ContainersPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map(c => (
-              <tr key={c.containerNo} className="border-b hover:bg-accent/50 cursor-pointer">
+            {filtered.map(c => {
+              const from = (c.dispatchedFrom || '').toLowerCase();
+              const arr = (c.arrivalLocation || '').toLowerCase();
+              let rowColor = '';
+              if (from === 'nylam' && arr === 'tatopani') rowColor = 'text-orange-600';
+              else if (from === 'nylam' && arr === 'kerung') rowColor = 'text-red-600';
+              else if (from === 'guangzhou') rowColor = 'text-blue-700';
+              else if (from === 'yiwu') rowColor = 'text-purple-700';
+              return (
+              <tr key={c.containerNo} className={`border-b hover:bg-accent/50 cursor-pointer ${rowColor}`}>
                 <td className="p-2 whitespace-nowrap font-bold text-primary" onClick={() => navigate(`/containers/${encodeURIComponent(c.containerNo)}`)}>{c.containerNo}</td>
                 <td className="p-2 whitespace-nowrap font-bold">{c.entries.length}</td>
                 <td className="p-2 whitespace-nowrap font-bold">{c.dispatchedDate}</td>
@@ -297,7 +305,8 @@ export default function ContainersPage() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {filtered.length === 0 && <tr><td colSpan={10} className="p-8 text-center text-muted-foreground font-bold">No containers found</td></tr>}
           </tbody>
         </table>
