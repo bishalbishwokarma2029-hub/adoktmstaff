@@ -272,6 +272,11 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
                 <span className="text-xs truncate">{editFileName || 'Open file'}</span>
               </a>
             )
+          ) : editHtml ? (
+            <div
+              className="excel-paste max-h-80 overflow-auto rounded border bg-background p-2 text-xs select-text [&_table]:border-collapse [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted"
+              dangerouslySetInnerHTML={{ __html: editHtml }}
+            />
           ) : (
             <p className="text-sm text-muted-foreground">No file selected.</p>
           )}
