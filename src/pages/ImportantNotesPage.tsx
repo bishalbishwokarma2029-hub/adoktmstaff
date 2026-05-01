@@ -144,11 +144,12 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   };
 
   const saveList = async () => {
-    if (!editFileUrl) { toast.error('No file uploaded'); return; }
+    if (!editFileUrl && !editHtml) { toast.error('No file or pasted data'); return; }
     if (editId) {
       await supabase.from('recent_loading_lists').update({
         title: editTitle,
         file_url: editFileUrl,
+        data: { fileName: editFileName, html: editHtml ?? undefined } as any,
         updated_by: user?.id,
         updated_at: new Date().toISOString(),
       } as any).eq('id', editId);
@@ -156,7 +157,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     } else {
       await supabase.from('recent_loading_lists').insert({
         title: editTitle,
-        data: { fileName: editFileName } as any,
+        data: { fileName: editFileName, html: editHtml ?? undefined } as any,
         file_url: editFileUrl,
         created_by: user?.id,
         updated_by: user?.id,
