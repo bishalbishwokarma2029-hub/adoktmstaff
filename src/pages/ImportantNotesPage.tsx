@@ -179,6 +179,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     setEditTitle(entry.title ?? '');
     setEditFileUrl(entry.file_url);
     setEditFileName((entry.data as any)?.fileName ?? entry.title ?? '');
+    setEditHtml((entry.data as any)?.html ?? null);
     setShowDialog(true);
   };
 
