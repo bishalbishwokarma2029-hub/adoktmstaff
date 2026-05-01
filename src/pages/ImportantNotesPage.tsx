@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 /* ───── helpers ───── */
