@@ -207,7 +207,8 @@ export default function LotwisePage() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {filtered.length === 0 && <tr><td colSpan={9} className="p-8 text-center text-muted-foreground font-bold">No lots found</td></tr>}
           </tbody>
         </table>
