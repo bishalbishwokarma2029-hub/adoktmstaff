@@ -511,6 +511,43 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox with prev/next */}
+      <Dialog open={lightboxImages.length > 0} onOpenChange={(o) => !o && closeLightbox()}>
+        <DialogContent className="max-w-5xl p-2 bg-background">
+          <DialogHeader className="sr-only"><DialogTitle>Image preview</DialogTitle></DialogHeader>
+          {lightboxImages.length > 0 && (
+            <div className="relative flex items-center justify-center">
+              <img
+                src={lightboxImages[lightboxIndex]}
+                alt={`Image ${lightboxIndex + 1}`}
+                className="max-h-[80vh] max-w-full object-contain"
+              />
+              {lightboxImages.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImg}
+                    aria-label="Previous image"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background rounded-full p-2 border shadow"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={nextImg}
+                    aria-label="Next image"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background rounded-full p-2 border shadow"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 px-2 py-0.5 rounded text-xs border">
+                    {lightboxIndex + 1} / {lightboxImages.length}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
