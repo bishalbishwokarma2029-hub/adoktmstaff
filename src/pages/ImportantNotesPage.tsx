@@ -94,6 +94,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     setEditTitle(file.name.replace(/\.\w+$/, ''));
     setEditFileName(file.name);
     setEditFileUrl(url);
+    setEditHtml(null);
     setEditId(null);
     setShowDialog(true);
   };
