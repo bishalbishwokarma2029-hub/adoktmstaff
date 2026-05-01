@@ -57,6 +57,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   const [editTitle, setEditTitle] = useState('');
   const [editFileUrl, setEditFileUrl] = useState<string | null>(null);
   const [editFileName, setEditFileName] = useState<string>('');
+  const [editHtml, setEditHtml] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
