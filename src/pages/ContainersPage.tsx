@@ -305,7 +305,8 @@ export default function ContainersPage() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {filtered.length === 0 && <tr><td colSpan={10} className="p-8 text-center text-muted-foreground font-bold">No containers found</td></tr>}
           </tbody>
         </table>
