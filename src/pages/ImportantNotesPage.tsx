@@ -437,12 +437,20 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
               {note.attachments.length > 0 && (
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {note.attachments.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                      {/\.(jpg|jpeg|png|gif|webp)$/i.test(url)
-                        ? <img src={url} alt="" className="h-12 w-12 object-cover rounded border" />
-                        : <div className="h-12 w-12 rounded border flex items-center justify-center bg-muted"><Upload className="h-4 w-4" /></div>
-                      }
-                    </a>
+                    isImage(url) ? (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => openLightbox(note.attachments, url)}
+                        className="block"
+                      >
+                        <img src={url} alt="" className="h-12 w-12 object-cover rounded border hover:opacity-80" />
+                      </button>
+                    ) : (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                        <div className="h-12 w-12 rounded border flex items-center justify-center bg-muted"><Upload className="h-4 w-4" /></div>
+                      </a>
+                    )
                   ))}
                 </div>
               )}
