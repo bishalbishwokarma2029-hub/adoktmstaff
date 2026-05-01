@@ -98,6 +98,34 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
+    // Prefer HTML (Excel/Sheets tables) so the data stays selectable text
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    if (html && /<table/i.test(html)) {
+      e.preventDefault();
+      setEditTitle('Pasted Excel Data');
+      setEditFileName('Pasted Excel Data');
+      setEditFileUrl(null);
+      setEditHtml(html);
+      setEditId(null);
+      setShowDialog(true);
+      return;
+    }
+    if (text && text.includes('\t')) {
+      e.preventDefault();
+      // Convert TSV to HTML table (selectable)
+      const rows = text.split(/\r?\n/).filter(r => r.length);
+      const tableHtml = '<table border="1" cellspacing="0" cellpadding="4">' +
+        rows.map(r => '<tr>' + r.split('\t').map(c => `<td>${c.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</td>`).join('') + '</tr>').join('') +
+        '</table>';
+      setEditTitle('Pasted Excel Data');
+      setEditFileName('Pasted Excel Data');
+      setEditFileUrl(null);
+      setEditHtml(tableHtml);
+      setEditId(null);
+      setShowDialog(true);
+      return;
+    }
     const items = Array.from(e.clipboardData.items);
     for (const item of items) {
       if (item.kind === 'file') {
