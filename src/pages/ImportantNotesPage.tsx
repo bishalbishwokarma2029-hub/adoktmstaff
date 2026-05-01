@@ -315,7 +315,32 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState<string[]>([]);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isImage = (u: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(u);
+  const openLightbox = (allAttachments: string[], clicked: string) => {
+    const imgs = allAttachments.filter(isImage);
+    const idx = imgs.indexOf(clicked);
+    if (idx === -1) return;
+    setLightboxImages(imgs);
+    setLightboxIndex(idx);
+  };
+  const closeLightbox = () => setLightboxImages([]);
+  const nextImg = () => setLightboxIndex(i => (i + 1) % lightboxImages.length);
+  const prevImg = () => setLightboxIndex(i => (i - 1 + lightboxImages.length) % lightboxImages.length);
+
+  useEffect(() => {
+    if (!lightboxImages.length) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') nextImg();
+      else if (e.key === 'ArrowLeft') prevImg();
+      else if (e.key === 'Escape') closeLightbox();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxImages.length]);
 
   const fetchNotes = useCallback(async () => {
     const { data } = await supabase
