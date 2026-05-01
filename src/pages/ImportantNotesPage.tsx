@@ -209,6 +209,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
           {lists.map(entry => {
             const url = entry.file_url;
             const kind = url ? fileKindFromUrl(url) : 'file';
+            const html = (entry.data as any)?.html as string | undefined;
             return (
               <Card key={entry.id} className="p-3">
                 <div className="flex items-center justify-between mb-2">
@@ -236,6 +237,11 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
                       <span className="text-xs truncate">{(entry.data as any)?.fileName || entry.title || 'Open file'}</span>
                     </a>
                   )
+                ) : html ? (
+                  <div
+                    className="excel-paste max-h-64 overflow-auto rounded border bg-background p-2 text-xs select-text [&_table]:border-collapse [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                  />
                 ) : (
                   <p className="text-xs text-muted-foreground">No file attached</p>
                 )}
