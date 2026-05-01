@@ -288,7 +288,7 @@ export default function ContainersPage() {
               else if (from === 'yiwu') rowColor = 'text-purple-700';
               return (
               <tr key={c.containerNo} className={`border-b hover:bg-accent/50 cursor-pointer ${rowColor}`}>
-                <td className="p-2 whitespace-nowrap font-bold text-primary" onClick={() => navigate(`/containers/${encodeURIComponent(c.containerNo)}`)}>{c.containerNo}</td>
+                <td className={`p-2 whitespace-nowrap font-bold underline ${rowColor || 'text-primary'}`} onClick={() => navigate(`/containers/${encodeURIComponent(c.containerNo)}`)}>{c.containerNo}</td>
                 <td className="p-2 whitespace-nowrap font-bold">{c.entries.length}</td>
                 <td className="p-2 whitespace-nowrap font-bold">{c.dispatchedDate}</td>
                 <td className="p-2 whitespace-nowrap font-bold">{c.dispatchedFrom}</td>

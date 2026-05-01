@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, Upload, X, FileSpreadsheet, StickyNote, Image, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 /* ───── helpers ───── */
@@ -57,6 +57,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   const [editTitle, setEditTitle] = useState('');
   const [editFileUrl, setEditFileUrl] = useState<string | null>(null);
   const [editFileName, setEditFileName] = useState<string>('');
+  const [editHtml, setEditHtml] = useState<string | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -93,11 +94,40 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     setEditTitle(file.name.replace(/\.\w+$/, ''));
     setEditFileName(file.name);
     setEditFileUrl(url);
+    setEditHtml(null);
     setEditId(null);
     setShowDialog(true);
   };
 
   const handlePaste = async (e: React.ClipboardEvent) => {
+    // Prefer HTML (Excel/Sheets tables) so the data stays selectable text
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain');
+    if (html && /<table/i.test(html)) {
+      e.preventDefault();
+      setEditTitle('Pasted Excel Data');
+      setEditFileName('Pasted Excel Data');
+      setEditFileUrl(null);
+      setEditHtml(html);
+      setEditId(null);
+      setShowDialog(true);
+      return;
+    }
+    if (text && text.includes('\t')) {
+      e.preventDefault();
+      // Convert TSV to HTML table (selectable)
+      const rows = text.split(/\r?\n/).filter(r => r.length);
+      const tableHtml = '<table border="1" cellspacing="0" cellpadding="4">' +
+        rows.map(r => '<tr>' + r.split('\t').map(c => `<td>${c.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</td>`).join('') + '</tr>').join('') +
+        '</table>';
+      setEditTitle('Pasted Excel Data');
+      setEditFileName('Pasted Excel Data');
+      setEditFileUrl(null);
+      setEditHtml(tableHtml);
+      setEditId(null);
+      setShowDialog(true);
+      return;
+    }
     const items = Array.from(e.clipboardData.items);
     for (const item of items) {
       if (item.kind === 'file') {
@@ -114,11 +144,12 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
   };
 
   const saveList = async () => {
-    if (!editFileUrl) { toast.error('No file uploaded'); return; }
+    if (!editFileUrl && !editHtml) { toast.error('No file or pasted data'); return; }
     if (editId) {
       await supabase.from('recent_loading_lists').update({
         title: editTitle,
         file_url: editFileUrl,
+        data: { fileName: editFileName, html: editHtml ?? undefined } as any,
         updated_by: user?.id,
         updated_at: new Date().toISOString(),
       } as any).eq('id', editId);
@@ -126,7 +157,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     } else {
       await supabase.from('recent_loading_lists').insert({
         title: editTitle,
-        data: { fileName: editFileName } as any,
+        data: { fileName: editFileName, html: editHtml ?? undefined } as any,
         file_url: editFileUrl,
         created_by: user?.id,
         updated_by: user?.id,
@@ -148,6 +179,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
     setEditTitle(entry.title ?? '');
     setEditFileUrl(entry.file_url);
     setEditFileName((entry.data as any)?.fileName ?? entry.title ?? '');
+    setEditHtml((entry.data as any)?.html ?? null);
     setShowDialog(true);
   };
 
@@ -177,6 +209,7 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
           {lists.map(entry => {
             const url = entry.file_url;
             const kind = url ? fileKindFromUrl(url) : 'file';
+            const html = (entry.data as any)?.html as string | undefined;
             return (
               <Card key={entry.id} className="p-3">
                 <div className="flex items-center justify-between mb-2">
@@ -204,6 +237,11 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
                       <span className="text-xs truncate">{(entry.data as any)?.fileName || entry.title || 'Open file'}</span>
                     </a>
                   )
+                ) : html ? (
+                  <div
+                    className="excel-paste max-h-64 overflow-auto rounded border bg-background p-2 text-xs select-text [&_table]:border-collapse [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                  />
                 ) : (
                   <p className="text-xs text-muted-foreground">No file attached</p>
                 )}
@@ -234,6 +272,11 @@ function RecentLoadingLists({ profiles }: { profiles: ProfileMap }) {
                 <span className="text-xs truncate">{editFileName || 'Open file'}</span>
               </a>
             )
+          ) : editHtml ? (
+            <div
+              className="excel-paste max-h-80 overflow-auto rounded border bg-background p-2 text-xs select-text [&_table]:border-collapse [&_td]:border [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:px-2 [&_th]:py-1 [&_th]:bg-muted"
+              dangerouslySetInnerHTML={{ __html: editHtml }}
+            />
           ) : (
             <p className="text-sm text-muted-foreground">No file selected.</p>
           )}
@@ -272,7 +315,32 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState<string[]>([]);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const isImage = (u: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(u);
+  const openLightbox = (allAttachments: string[], clicked: string) => {
+    const imgs = allAttachments.filter(isImage);
+    const idx = imgs.indexOf(clicked);
+    if (idx === -1) return;
+    setLightboxImages(imgs);
+    setLightboxIndex(idx);
+  };
+  const closeLightbox = () => setLightboxImages([]);
+  const nextImg = () => setLightboxIndex(i => (i + 1) % lightboxImages.length);
+  const prevImg = () => setLightboxIndex(i => (i - 1 + lightboxImages.length) % lightboxImages.length);
+
+  useEffect(() => {
+    if (!lightboxImages.length) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') nextImg();
+      else if (e.key === 'ArrowLeft') prevImg();
+      else if (e.key === 'Escape') closeLightbox();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightboxImages.length]);
 
   const fetchNotes = useCallback(async () => {
     const { data } = await supabase
@@ -369,12 +437,20 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
               {note.attachments.length > 0 && (
                 <div className="flex gap-1 mt-2 flex-wrap">
                   {note.attachments.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
-                      {/\.(jpg|jpeg|png|gif|webp)$/i.test(url)
-                        ? <img src={url} alt="" className="h-12 w-12 object-cover rounded border" />
-                        : <div className="h-12 w-12 rounded border flex items-center justify-center bg-muted"><Upload className="h-4 w-4" /></div>
-                      }
-                    </a>
+                    isImage(url) ? (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => openLightbox(note.attachments, url)}
+                        className="block"
+                      >
+                        <img src={url} alt="" className="h-12 w-12 object-cover rounded border hover:opacity-80" />
+                      </button>
+                    ) : (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                        <div className="h-12 w-12 rounded border flex items-center justify-center bg-muted"><Upload className="h-4 w-4" /></div>
+                      </a>
+                    )
                   ))}
                 </div>
               )}
@@ -433,6 +509,43 @@ function NotesTab({ profiles }: { profiles: ProfileMap }) {
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
             <Button onClick={saveNote}><Save className="h-4 w-4 mr-1" /> Save</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Lightbox with prev/next */}
+      <Dialog open={lightboxImages.length > 0} onOpenChange={(o) => !o && closeLightbox()}>
+        <DialogContent className="max-w-5xl p-2 bg-background">
+          <DialogHeader className="sr-only"><DialogTitle>Image preview</DialogTitle></DialogHeader>
+          {lightboxImages.length > 0 && (
+            <div className="relative flex items-center justify-center">
+              <img
+                src={lightboxImages[lightboxIndex]}
+                alt={`Image ${lightboxIndex + 1}`}
+                className="max-h-[80vh] max-w-full object-contain"
+              />
+              {lightboxImages.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImg}
+                    aria-label="Previous image"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background rounded-full p-2 border shadow"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={nextImg}
+                    aria-label="Next image"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background rounded-full p-2 border shadow"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/80 px-2 py-0.5 rounded text-xs border">
+                    {lightboxIndex + 1} / {lightboxImages.length}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
