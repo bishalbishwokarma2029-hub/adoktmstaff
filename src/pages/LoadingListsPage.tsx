@@ -447,8 +447,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                       })()}
                     </td>
                     <td className="p-1.5 whitespace-nowrap">
-                      <button onClick={() => { const n = new Set(expandedTatopani); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedTatopani(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
-                        {isTatopaniExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} TATOPANI
+                      <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
+                        {isKerungExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} KERUNG
+                      </button>
+                    </td>
                       </button>
                     </td>
                     <td className="p-1.5 whitespace-nowrap highlight-field font-bold">{onTheWay ?? '-'}</td>
