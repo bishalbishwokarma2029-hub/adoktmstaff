@@ -322,6 +322,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-0 !z-40 w-[130px] min-w-[130px] !bg-[hsl(48_100%_72%)]">Consignment No.</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-[130px] !z-40 w-[140px] min-w-[140px] !bg-[hsl(48_100%_72%)]">MARKA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-[270px] !z-40 w-[90px] min-w-[90px] !bg-[hsl(48_100%_72%)]">Total CTNS</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[100px] highlight-field">Loaded CTNS</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px]">Date</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">CBM</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">GW</th>
@@ -331,8 +332,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px] highlight-field">Received CTN at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ LHASA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px] highlight-field">Received CTN at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">On the Way</th>
