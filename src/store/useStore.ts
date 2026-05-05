@@ -106,6 +106,9 @@ function mapLoadingFromDb(row: any): LoadingListEntry {
     missingCTN: row.missing_ctn != null ? Number(row.missing_ctn) : null,
     remainingCTNNylam: row.remaining_ctn_nylam != null ? Number(row.remaining_ctn_nylam) : null,
     remainingCTNLhasa: row.remaining_ctn_lhasa != null ? Number(row.remaining_ctn_lhasa) : null,
+    loadedCTNS: row.loaded_ctns != null ? Number(row.loaded_ctns) : null,
+    receivedCTNLhasa: row.received_ctn_lhasa != null ? Number(row.received_ctn_lhasa) : null,
+    receivedCTNNylam: row.received_ctn_nylam != null ? Number(row.received_ctn_nylam) : null,
     followUp: row.follow_up || false,
     origin: row.origin || 'guangzhou',
     createdBy: row.created_by || '',
@@ -308,6 +311,9 @@ export const useStore = create<AppStore>()((set, get) => ({
     if (updates.tatopani !== undefined) dbUpdates.tatopani = updates.tatopani;
     if (updates.followUp !== undefined) dbUpdates.follow_up = updates.followUp;
     if ((updates as any).remainingCTNLhasa !== undefined) dbUpdates.remaining_ctn_lhasa = (updates as any).remainingCTNLhasa;
+    if ((updates as any).loadedCTNS !== undefined) dbUpdates.loaded_ctns = (updates as any).loadedCTNS;
+    if ((updates as any).receivedCTNLhasa !== undefined) dbUpdates.received_ctn_lhasa = (updates as any).receivedCTNLhasa;
+    if ((updates as any).receivedCTNNylam !== undefined) dbUpdates.received_ctn_nylam = (updates as any).receivedCTNNylam;
     await db.from('loading_list_entries').update(dbUpdates).eq('id', id);
     const key = origin === 'guangzhou' ? 'loadingListGuangzhou' : 'loadingListYiwu';
     set((s) => ({
