@@ -680,6 +680,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Consignment No.</span><span className="font-bold text-lg">{viewItem.consignmentNo}</span></div>
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">🏷️ MARKA</span><span className="font-bold text-lg">{viewItem.marka}</span></div>
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Total CTN</span><span className="text-xl font-bold">{viewItem.totalCTN}</span></div>
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Loaded CTNS</span><span className="text-xl font-bold">{viewItem.loadedCTNS ?? viewItem.totalCTN}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📐 CBM</span><span className="font-bold">{viewItem.cbm}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">⚖️ GW (KG)</span><span className="font-bold">{viewItem.gw}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📍 Destination</span><span className={`font-bold ${getDestinationClass(viewItem.destination)}`}>{viewItem.destination}</span></div>
@@ -687,10 +688,18 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from {cityName}</span><span className="font-bold">{viewItem.dispatchedFrom || '-'}</span></div>
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 {cityName} Container</span><span className="font-bold">{viewItem.container || '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Nylam</span><span className="font-bold">{viewItem.arrivalDateNylam || '-'}</span></div>
+                  {(() => {
+                    const totalLhasaLoaded = (viewItem.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                    const recvNylam = viewItem.receivedCTNNylam ?? (totalLhasaLoaded > 0 ? totalLhasaLoaded : null);
+                    return recvNylam != null ? (
+                      <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Received CTN at Nylam</span><span className="text-xl font-bold">{recvNylam}</span></div>
+                    ) : null;
+                  })()}
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">👤 Client</span><span className="font-bold text-lg">{viewItem.client || '-'}</span></div>
                   {viewItem.arrivalAtLhasa && (
                     <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Lhasa</span><span className="font-bold">{viewItem.arrivalAtLhasa}</span></div>
                   )}
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Received CTN at Lhasa</span><span className="text-xl font-bold">{viewItem.receivedCTNLhasa ?? viewItem.totalCTN}</span></div>
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🔄 On the Way</span><span className="text-xl font-bold">{calcOnTheWay(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2 bg-destructive/10"><span className="text-xs font-bold uppercase text-muted-foreground block">⚠️ Missing CTN</span><span className="text-xl font-bold">{calcMissing(viewItem) ?? '-'}</span></div>
                   {viewItem.remainingCTNLhasa != null && (
