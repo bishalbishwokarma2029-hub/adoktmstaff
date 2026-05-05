@@ -86,6 +86,13 @@ export default function TrackingPage() {
                         <div><span className="text-muted-foreground text-xs">Total CTN</span><div className="font-bold text-primary">{e.totalCTN}</div></div>
                         <div><span className="text-muted-foreground text-xs">Destination</span><div className={`font-bold ${getDestinationClass(e.destination)}`}>{e.destination}</div></div>
                       </div>
+                      {(e.loadedCTNS != null || e.receivedCTNLhasa != null || e.receivedCTNNylam != null) && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-3">
+                          {e.loadedCTNS != null && <div className="bg-primary/5 rounded p-2 border border-primary/20"><span className="text-muted-foreground text-xs">Loaded CTNS</span><div className="font-bold text-primary">{e.loadedCTNS}</div></div>}
+                          {e.receivedCTNLhasa != null && <div className="bg-primary/5 rounded p-2 border border-primary/20"><span className="text-muted-foreground text-xs">Received CTN at Lhasa</span><div className="font-bold text-primary">{e.receivedCTNLhasa}</div></div>}
+                          {e.receivedCTNNylam != null && <div className="bg-primary/5 rounded p-2 border border-primary/20"><span className="text-muted-foreground text-xs">Received CTN at Nylam</span><div className="font-bold text-primary">{e.receivedCTNNylam}</div></div>}
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-3">
                         <div className="bg-primary/5 rounded p-2 border border-primary/20"><span className="text-muted-foreground text-xs">Client</span><div className="font-bold text-primary">{e.client || '-'}</div></div>
                         <div><span className="text-muted-foreground text-xs">Date</span><div className="font-semibold">{e.date}</div></div>
