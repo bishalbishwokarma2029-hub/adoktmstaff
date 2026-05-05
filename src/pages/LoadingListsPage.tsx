@@ -494,7 +494,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   </tr>
                   {(isKerungExpanded || isTatopaniExpanded || isLhasaExpanded) && (
                     <tr className="border-b">
-                      <td colSpan={selectMode ? 28 : 27} className="p-0">
+                      <td colSpan={selectMode ? 31 : 30} className="p-0">
                         <div className="flex flex-col gap-3 py-3 px-4">
                           {isLhasaExpanded && (
                             <div className="border rounded-lg p-3 w-full max-w-md mx-auto bg-purple-50/40">
@@ -627,7 +627,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={selectMode ? 28 : 27} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={selectMode ? 31 : 30} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>
