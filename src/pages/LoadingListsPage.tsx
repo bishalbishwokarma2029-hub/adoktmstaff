@@ -431,10 +431,20 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                         );
                       })()}
                     </td>
-                    <td className="p-1.5 whitespace-nowrap">
-                      <button onClick={() => { const n = new Set(expandedKerung); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedKerung(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
-                        {isKerungExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} KERUNG
-                      </button>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from sum of Loaded CTN inside LHASA. Editable.">
+                      {(() => {
+                        const totalLhasaLoaded = (e.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                        const auto = totalLhasaLoaded > 0 ? totalLhasaLoaded : null;
+                        const displayed = e.receivedCTNNylam ?? auto ?? '';
+                        return (
+                          <DebouncedInput
+                            type="number"
+                            className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                            value={displayed}
+                            onChange={(v) => store.updateLoadingListEntry(e.id, origin, { receivedCTNNylam: v === '' ? null : Number(v) } as any)}
+                          />
+                        );
+                      })()}
                     </td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedTatopani); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedTatopani(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
