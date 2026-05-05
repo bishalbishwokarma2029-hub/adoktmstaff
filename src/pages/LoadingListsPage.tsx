@@ -367,6 +367,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10 w-[130px] min-w-[130px]">{e.consignmentNo}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-[130px] bg-card z-10 w-[140px] min-w-[140px]">{e.marka}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-[270px] bg-card z-10 w-[90px] min-w-[90px]">{e.totalCTN}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from Total CTNS. Editable.">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.loadedCTNS ?? e.totalCTN ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { loadedCTNS: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.date}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.cbm}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.gw}</td>
@@ -376,6 +384,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from Total CTNS. Editable.">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.receivedCTNLhasa ?? e.totalCTN ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { receivedCTNLhasa: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedLhasa); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedLhasa(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
                         {isLhasaExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} LHASA{(e.lhasa?.length ?? 0) > 0 ? ` (${e.lhasa.length})` : ''}
