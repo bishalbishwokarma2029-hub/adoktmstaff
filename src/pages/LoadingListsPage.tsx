@@ -322,6 +322,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-0 !z-40 w-[130px] min-w-[130px] !bg-[hsl(48_100%_72%)]">Consignment No.</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-[130px] !z-40 w-[140px] min-w-[140px] !bg-[hsl(48_100%_72%)]">MARKA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap !sticky !left-[270px] !z-40 w-[90px] min-w-[90px] !bg-[hsl(48_100%_72%)]">Total CTNS</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[100px] highlight-field">Loaded CTNS</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px]">Date</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">CBM</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[80px]">GW</th>
@@ -331,8 +332,10 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
               <th className="p-1.5 text-left font-bold whitespace-nowrap">{cityName} Container</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Status</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Lhasa</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px] highlight-field">Received CTN at Lhasa</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ LHASA</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap">Arrival at Nylam</th>
+              <th className="p-1.5 text-left font-bold whitespace-nowrap min-w-[110px] highlight-field">Received CTN at Nylam</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ KERUNG</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap cursor-pointer">▸ TATOPANI</th>
               <th className="p-1.5 text-left font-bold whitespace-nowrap highlight-field">On the Way</th>
@@ -364,6 +367,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-0 bg-card z-10 w-[130px] min-w-[130px]">{e.consignmentNo}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-[130px] bg-card z-10 w-[140px] min-w-[140px]">{e.marka}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold sticky left-[270px] bg-card z-10 w-[90px] min-w-[90px]">{e.totalCTN}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from Total CTNS. Editable.">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.loadedCTNS ?? e.totalCTN ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { loadedCTNS: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.date}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.cbm}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.gw}</td>
@@ -373,6 +384,14 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.container}</td>
                     <td className="p-1.5 whitespace-nowrap font-bold"><span className={`status-badge ${getStatusClass(e.status)}`}>{e.status || '-'}</span></td>
                     <td className="p-1.5 whitespace-nowrap font-bold">{e.arrivalAtLhasa}</td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from Total CTNS. Editable.">
+                      <DebouncedInput
+                        type="number"
+                        className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                        value={e.receivedCTNLhasa ?? e.totalCTN ?? ''}
+                        onChange={(v) => store.updateLoadingListEntry(e.id, origin, { receivedCTNLhasa: v === '' ? null : Number(v) } as any)}
+                      />
+                    </td>
                     <td className="p-1.5 whitespace-nowrap">
                       <button onClick={() => { const n = new Set(expandedLhasa); if (n.has(e.id)) n.delete(e.id); else n.add(e.id); setExpandedLhasa(n); }} className="flex items-center gap-1 text-primary hover:underline font-bold">
                         {isLhasaExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />} LHASA{(e.lhasa?.length ?? 0) > 0 ? ` (${e.lhasa.length})` : ''}
@@ -409,6 +428,21 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                               onClick={() => updateDates([...dates, ''])}
                             >+ Add date</button>
                           </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from sum of Loaded CTN inside LHASA. Editable.">
+                      {(() => {
+                        const totalLhasaLoaded = (e.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                        const auto = totalLhasaLoaded > 0 ? totalLhasaLoaded : null;
+                        const displayed = e.receivedCTNNylam ?? auto ?? '';
+                        return (
+                          <DebouncedInput
+                            type="number"
+                            className="h-8 text-center font-bold border-0 bg-transparent w-full highlight-field"
+                            value={displayed}
+                            onChange={(v) => store.updateLoadingListEntry(e.id, origin, { receivedCTNNylam: v === '' ? null : Number(v) } as any)}
+                          />
                         );
                       })()}
                     </td>
@@ -460,7 +494,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   </tr>
                   {(isKerungExpanded || isTatopaniExpanded || isLhasaExpanded) && (
                     <tr className="border-b">
-                      <td colSpan={selectMode ? 28 : 27} className="p-0">
+                      <td colSpan={selectMode ? 31 : 30} className="p-0">
                         <div className="flex flex-col gap-3 py-3 px-4">
                           {isLhasaExpanded && (
                             <div className="border rounded-lg p-3 w-full max-w-md mx-auto bg-purple-50/40">
@@ -593,7 +627,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                 </React.Fragment>
               );
             })}
-            {filtered.length === 0 && <tr><td colSpan={selectMode ? 28 : 27} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={selectMode ? 31 : 30} className="p-8 text-center text-muted-foreground">No entries found</td></tr>}
           </tbody>
         </table>
       </div>
@@ -646,6 +680,7 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Consignment No.</span><span className="font-bold text-lg">{viewItem.consignmentNo}</span></div>
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">🏷️ MARKA</span><span className="font-bold text-lg">{viewItem.marka}</span></div>
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Total CTN</span><span className="text-xl font-bold">{viewItem.totalCTN}</span></div>
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Loaded CTNS</span><span className="text-xl font-bold">{viewItem.loadedCTNS ?? viewItem.totalCTN}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📐 CBM</span><span className="font-bold">{viewItem.cbm}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">⚖️ GW (KG)</span><span className="font-bold">{viewItem.gw}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📍 Destination</span><span className={`font-bold ${getDestinationClass(viewItem.destination)}`}>{viewItem.destination}</span></div>
@@ -653,10 +688,18 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">🚚 Dispatched from {cityName}</span><span className="font-bold">{viewItem.dispatchedFrom || '-'}</span></div>
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🚢 {cityName} Container</span><span className="font-bold">{viewItem.container || '-'}</span></div>
                   <div className="border rounded p-2"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Nylam</span><span className="font-bold">{viewItem.arrivalDateNylam || '-'}</span></div>
+                  {(() => {
+                    const totalLhasaLoaded = (viewItem.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
+                    const recvNylam = viewItem.receivedCTNNylam ?? (totalLhasaLoaded > 0 ? totalLhasaLoaded : null);
+                    return recvNylam != null ? (
+                      <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Received CTN at Nylam</span><span className="text-xl font-bold">{recvNylam}</span></div>
+                    ) : null;
+                  })()}
                   <div className="border rounded p-2 bg-warning/20 border-warning/30"><span className="text-xs font-bold uppercase text-muted-foreground block">👤 Client</span><span className="font-bold text-lg">{viewItem.client || '-'}</span></div>
                   {viewItem.arrivalAtLhasa && (
                     <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📅 Arrival at Lhasa</span><span className="font-bold">{viewItem.arrivalAtLhasa}</span></div>
                   )}
+                  <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">📦 Received CTN at Lhasa</span><span className="text-xl font-bold">{viewItem.receivedCTNLhasa ?? viewItem.totalCTN}</span></div>
                   <div className="border rounded p-2 bg-primary/5"><span className="text-xs font-bold uppercase text-muted-foreground block">🔄 On the Way</span><span className="text-xl font-bold">{calcOnTheWay(viewItem) ?? '-'}</span></div>
                   <div className="border rounded p-2 bg-destructive/10"><span className="text-xs font-bold uppercase text-muted-foreground block">⚠️ Missing CTN</span><span className="text-xl font-bold">{calcMissing(viewItem) ?? '-'}</span></div>
                   {viewItem.remainingCTNLhasa != null && (
