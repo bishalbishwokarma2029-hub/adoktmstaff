@@ -431,10 +431,11 @@ function LoadingListTable({ origin }: { origin: 'guangzhou' | 'yiwu' }) {
                         );
                       })()}
                     </td>
-                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from sum of Loaded CTN inside LHASA. Editable.">
+                    <td className="p-1.5 whitespace-nowrap highlight-field font-bold p-0" title="Auto-fills from sum of Loaded CTN inside LHASA, or Total CTNS if LHASA is empty. Editable.">
                       {(() => {
+                        const hasLhasa = (e.lhasa?.length ?? 0) > 0;
                         const totalLhasaLoaded = (e.lhasa || []).reduce((s, l) => s + (l.loadedCTN || 0), 0);
-                        const auto = totalLhasaLoaded > 0 ? totalLhasaLoaded : null;
+                        const auto = hasLhasa ? totalLhasaLoaded : (e.totalCTN ?? null);
                         const displayed = e.receivedCTNNylam ?? auto ?? '';
                         return (
                           <DebouncedInput
