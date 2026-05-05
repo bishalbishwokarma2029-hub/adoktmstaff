@@ -121,11 +121,14 @@ export type Database = {
           kerung: Json | null
           lhasa: Json | null
           lhasa_container: string | null
+          loaded_ctns: number | null
           lot_no: string | null
           marka: string | null
           missing_ctn: number | null
           on_the_way: number | null
           origin: string
+          received_ctn_lhasa: number | null
+          received_ctn_nylam: number | null
           remaining_ctn_lhasa: number | null
           remaining_ctn_nylam: number | null
           remarks: string | null
@@ -154,11 +157,14 @@ export type Database = {
           kerung?: Json | null
           lhasa?: Json | null
           lhasa_container?: string | null
+          loaded_ctns?: number | null
           lot_no?: string | null
           marka?: string | null
           missing_ctn?: number | null
           on_the_way?: number | null
           origin?: string
+          received_ctn_lhasa?: number | null
+          received_ctn_nylam?: number | null
           remaining_ctn_lhasa?: number | null
           remaining_ctn_nylam?: number | null
           remarks?: string | null
@@ -187,11 +193,14 @@ export type Database = {
           kerung?: Json | null
           lhasa?: Json | null
           lhasa_container?: string | null
+          loaded_ctns?: number | null
           lot_no?: string | null
           marka?: string | null
           missing_ctn?: number | null
           on_the_way?: number | null
           origin?: string
+          received_ctn_lhasa?: number | null
+          received_ctn_nylam?: number | null
           remaining_ctn_lhasa?: number | null
           remaining_ctn_nylam?: number | null
           remarks?: string | null
